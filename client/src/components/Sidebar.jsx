@@ -2,8 +2,10 @@ import React from 'react';
 
 export default function Sidebar({ 
   user, onLogout, addItem, setMode, mode, 
-  selectedId, updateColor, saveDesign, loadDesigns 
+  selectedId, updateColor, saveDesign, loadDesigns,
+  ambientIntensity, setAmbientIntensity, spotIntensity, setSpotIntensity
 }) {
+
   return (
     <div style={styles.panel}>
       <h3>👤 {user.username}</h3>
@@ -29,8 +31,27 @@ export default function Sidebar({
         </div>
       )}
 
+            <div style={styles.section}>
+        <h4>4. Lighting</h4>
+        <label>Ambient Light: {ambientIntensity.toFixed(2)}</label>
+        <input 
+          type="range" min="0" max="2" step="0.1" 
+          value={ambientIntensity} 
+          onChange={(e) => setAmbientIntensity(parseFloat(e.target.value))} 
+          style={{width: '100%'}}
+        />
+        <label>Spot Light: {spotIntensity.toFixed(2)}</label>
+        <input 
+          type="range" min="0" max="5" step="0.1" 
+          value={spotIntensity} 
+          onChange={(e) => setSpotIntensity(parseFloat(e.target.value))} 
+          style={{width: '100%'}}
+        />
+      </div>
+
+
       <div style={styles.section}>
-        <h4>4. Project</h4>
+        <h4>5. Project</h4>
         <button style={styles.saveBtn} onClick={saveDesign}>💾 Save Design</button>
         <button style={styles.btn} onClick={loadDesigns}>📂 Load Previous</button>
       </div>

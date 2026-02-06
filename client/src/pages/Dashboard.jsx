@@ -11,7 +11,9 @@ export default function Dashboard() {
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [mode, setMode] = useState('3D');
-  
+  const [ambientIntensity, setAmbientIntensity] = useState(0.5);
+  const [spotIntensity, setSpotIntensity] = useState(1.0);
+
   // Modal State
   const [showSaveModal, setShowSaveModal] = useState(false);
 
@@ -66,6 +68,11 @@ export default function Dashboard() {
         updateColor={updateColor}
         saveDesign={() => setShowSaveModal(true)} // Open modal instead of prompt
         loadDesigns={loadDesigns}
+        ambientIntensity={ambientIntensity}
+        setAmbientIntensity={setAmbientIntensity}
+        spotIntensity={spotIntensity}
+        setSpotIntensity={setSpotIntensity}
+
       />
       <DesignCanvas
         items={items}
@@ -73,6 +80,9 @@ export default function Dashboard() {
         setSelectedId={setSelectedId}
         updateItem={updateItem}
         mode={mode}
+        ambientIntensity={ambientIntensity}
+        spotIntensity={spotIntensity}
+
       />
 
       {/* The Save Modal */}
