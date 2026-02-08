@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid } from '@react-three/drei';
 import Furniture from './Furniture';
 
-export default function DesignCanvas({ items, selectedId, setSelectedId, updateItem, mode }) {
+export default function DesignCanvas({ items, selectedId, setSelectedId, updateItem, mode, ambientIntensity, spotIntensity }) {
   const controlsRef = useRef();
 
   // Effect: When mode changes to 2D, force the camera to look top-down
@@ -27,8 +27,8 @@ export default function DesignCanvas({ items, selectedId, setSelectedId, updateI
       <Canvas shadows camera={{ position: [5, 5, 5], fov: 50 }}>
         
         {/* Environment */}
-        <ambientLight intensity={0.5} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />
+        <ambientLight intensity={ambientIntensity} />
+        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow intensity={spotIntensity} />
         <Grid infiniteGrid fadeDistance={50} sectionColor="#444" cellColor="#666" />
 
         {/* Render All Furniture Items */}
