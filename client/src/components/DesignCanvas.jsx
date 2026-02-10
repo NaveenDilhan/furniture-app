@@ -1,58 +1,116 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid } from '@react-three/drei';
+import { 
+  OrbitControls, PointerLockControls, Sky, Stars, 
+  GizmoHelper, GizmoViewport, SoftShadows, Grid 
+} from '@react-three/drei';
 import Furniture from './Furniture';
+import Room from './Room';
 
-export default function DesignCanvas({ items, selectedId, setSelectedId, updateItem, mode, ambientIntensity, spotIntensity }) {
-  const controlsRef = useRef();
+const LIGHT_CONFIG = {
+  Day: { ambient: 0.6, sun: [100, 100, 50], sky: true, bg: '#87CEEB' },
+  Golden: { ambient: 0.5, sun: [10, 5, 10], sky: true, bg: '#ffcc00' },
+  Night: { ambient: 0.1, sun: [0, -10, 0], sky: false, bg: '#111111' },
+};
 
-  // Effect: When mode changes to 2D, force the camera to look top-down
-  useEffect(() => {
-    if (controlsRef.current) {
-      if (mode === '2D') {
-        // Reset camera for top-down view
-        controlsRef.current.object.position.set(0, 10, 0); // Move camera up
-        controlsRef.current.object.lookAt(0, 0, 0);        // Look at center
-        controlsRef.current.update();
-      } else {
-        // Reset camera for 3D view
-        controlsRef.current.object.position.set(5, 5, 5);
-        controlsRef.current.update();
-      }
-    }
-  }, [mode]);
+const DesignCanvas = forwardRef(({ 
+  items, selectedId, setSelectedId, updateItem, mode, roomConfig 
+}, ref) => {
+  const canvasRef = useRef();
+  
+  // State to track if we are currently dragging an object
+  // When dragging, we disable the camera orbit to prevent dizziness
+  const [isDragging, setIsDragging] = useState(false);
+
+  useImperativeHandle(ref, () => ({
+    takeScreenshot: () => canvasRef.current.toDataURL('image/jpeg', 0.8)
+  }));
+
+  const config = LIGHT_CONFIG[roomConfig.lightingMode] || LIGHT_CONFIG.Day;
 
   return (
-    <div style={{ flex: 1, position: 'relative', background: '#202020' }}>
-      <Canvas shadows camera={{ position: [5, 5, 5], fov: 50 }}>
-        
-        {/* Environment */}
-        <ambientLight intensity={ambientIntensity} />
-        <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow intensity={spotIntensity} />
-        <Grid infiniteGrid fadeDistance={50} sectionColor="#444" cellColor="#666" />
+    <Canvas
+      shadows
+      dpr={[1, 2]}
+      camera={{ position: [10, 10, 10], fov: 50 }}
+      gl={{ preserveDrawingBuffer: true, antialias: true }}
+      ref={canvasRef}
+      onPointerMissed={() => {
+        // Only deselect if we aren't dragging
+        if (!isDragging) setSelectedId(null);
+      }}
+    >
+      <color attach="background" args={[config.bg]} />
+      
+      {/* --- Environment --- */}
+      <ambientLight intensity={config.ambient} />
+      {config.sky ? (
+        <Sky sunPosition={config.sun} turbidity={8} rayleigh={6} />
+      ) : (
+        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+      )}
+      
+      <directionalLight 
+        position={[10, 20, 10]} 
+        intensity={1.2} 
+        castShadow 
+        shadow-mapSize={[2048, 2048]} 
+      />
+      <SoftShadows size={15} focus={0.5} samples={12} />
 
-        {/* Render All Furniture Items */}
-        {items.map((item) => (
-          <Furniture
-            key={item.id}
-            data={item}
-            isSelected={selectedId === item.id}
-            onSelect={setSelectedId}
-            onChange={updateItem}
-          />
-        ))}
-
-        {/* --- FIX: SINGLE ORBIT CONTROLS --- */}
-        <OrbitControls 
-          ref={controlsRef}
-          makeDefault 
-          // If 2D, disable rotation. If 3D, enable it.
-          enableRotate={mode === '3D'}
-          // If 2D, lock angle to top (0). If 3D, allow full rotation (PI).
-          maxPolarAngle={mode === '2D' ? 0 : Math.PI}
-          minPolarAngle={0} 
+      {/* --- Room Geometry --- */}
+      <group position={[0, -0.01, 0]}>
+        <Room 
+          width={roomConfig.width} 
+          depth={roomConfig.depth} 
+          wallColor={roomConfig.wallColor} 
+          floorColor={roomConfig.floorColor} 
         />
-      </Canvas>
-    </div>
+        
+        {mode !== 'Tour' && (
+          <Grid 
+            args={[roomConfig.width, roomConfig.depth]} 
+            sectionColor="#555" 
+            cellColor="#777" 
+            infiniteGrid={false} 
+          />
+        )}
+      </group>
+
+      {/* --- Furniture Items --- */}
+      {items.map((item) => (
+        <Furniture
+          key={item.id}
+          data={item}
+          isSelected={selectedId === item.id}
+          onSelect={setSelectedId}
+          onChange={updateItem}
+          mode={mode}
+          setIsDragging={setIsDragging} // Pass this down
+        />
+      ))}
+
+      {/* --- Controls --- */}
+      {mode === 'Tour' ? (
+        <PointerLockControls selector="#tour-overlay" />
+      ) : (
+        <>
+          <OrbitControls 
+            makeDefault 
+            enabled={!isDragging} // Disable camera when dragging furniture
+            enableDamping 
+            dampingFactor={0.05}
+            maxPolarAngle={mode === '2D' ? 0 : Math.PI / 2 - 0.05}
+            minDistance={2}
+            maxDistance={50}
+          />
+          <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+            <GizmoViewport axisColors={['#d15656', '#4fa853', '#4a7ecf']} labelColor="white" />
+          </GizmoHelper>
+        </>
+      )}
+    </Canvas>
   );
-}
+});
+
+export default DesignCanvas;
