@@ -140,8 +140,36 @@ export default function Dashboard() {
           updateItem={updateItem}
           mode={mode}
           roomConfig={roomConfig}
-        />
+               />
+
+        {/* Tour Mode Overlay */}
+        {mode === 'Tour' && (
+          <div id="tour-overlay" style={{
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.7)', cursor: 'pointer', zIndex: 2
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚶</div>
+            <h2 style={{ color: 'white', margin: '0 0 10px' }}>Virtual Tour Mode</h2>
+            <p style={{ color: '#aaa', margin: '0 0 20px', textAlign: 'center' }}>
+              Click anywhere to start walking  
+
+              Use <b>W A S D</b> to move around  
+
+              Move your <b>mouse</b> to look around  
+
+              Press <b>ESC</b> to release cursor
+            </p>
+            <div style={{
+              padding: '12px 32px', background: '#3b82f6', color: 'white',
+              borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
+            }}>
+              Click to Enter Tour
+            </div>
+          </div>
+        )}
       </div>
+
 
       {toast && <Toast message={toast} />}
       
