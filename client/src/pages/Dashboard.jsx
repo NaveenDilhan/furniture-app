@@ -24,6 +24,8 @@ export default function Dashboard() {
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [mode, setMode] = useState('3D'); // Modes: 3D, 2D, Tour
+  const [showTourOverlay, setShowTourOverlay] = useState(true);
+
   
   const [roomConfig, setRoomConfig] = useState({
     width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
@@ -37,6 +39,13 @@ export default function Dashboard() {
     if (!storedUser) navigate('/');
     else setUser(JSON.parse(storedUser));
   }, [navigate]);
+
+    const handleModeChange = (newMode) => {
+    setMode(newMode);
+    if (newMode === 'Tour') {
+      setShowTourOverlay(true);
+    }
+  };
 
   const showToast = (msg) => {
     setToast(msg);
@@ -127,9 +136,10 @@ export default function Dashboard() {
           padding: '8px 16px', borderRadius: 20, backdropFilter: 'blur(6px)', 
           border: '1px solid #555', boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
         }}>
-          <button className={`btn ${mode === '3D' ? 'btn-primary' : ''}`} onClick={() => setMode('3D')}>📦 3D View</button>
-          <button className={`btn ${mode === '2D' ? 'btn-primary' : ''}`} onClick={() => setMode('2D')}>📐 Blueprint</button>
-          <button className={`btn ${mode === 'Tour' ? 'btn-primary' : ''}`} onClick={() => setMode('Tour')}>🚶 Tour Mode</button>
+          <button className={`btn ${mode === '3D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('3D')}>📦 3D View</button>
+          <button className={`btn ${mode === '2D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('2D')}>📐 Blueprint</button>
+          <button className={`btn ${mode === 'Tour' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('Tour')}>🚶 Tour Mode</button>
+
         </div>
 
         <DesignCanvas
@@ -140,8 +150,72 @@ export default function Dashboard() {
           updateItem={updateItem}
           mode={mode}
           roomConfig={roomConfig}
-        />
+               />
+
+                {/* Tour Mode Overlay - only shows when overlay is active */}
+        {mode === 'Tour' && showTourOverlay && (
+          <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={{
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.7)', cursor: 'pointer', zIndex: 2
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚶</div>
+            <h2 style={{ color: 'white', margin: '0 0 10px' }}>Virtual Tour Mode</h2>
+            <p style={{ color: '#aaa', margin: '0 0 20px', textAlign: 'center' }}>
+              Click anywhere to start walking  
+                
+
+              Use <b>W A S D</b> to move around  
+                
+
+              Move your <b>mouse</b> to look around  
+                
+
+              Press <b>ESC</b> to release cursor
+            </p>
+            <div style={{
+              padding: '12px 32px', background: '#3b82f6', color: 'white',
+              borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
+            }}>
+              Click to Enter Tour
+            </div>
+          </div>
+        )}
+
+        {/* Small Help Button - shows when touring (overlay hidden) */}
+        {mode === 'Tour' && !showTourOverlay && (
+          <button
+            onClick={() => setShowTourOverlay(true)}
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              left: 20,
+              zIndex: 10,
+              background: 'rgba(30, 30, 30, 0.8)',
+              color: '#fff',
+              border: '1px solid #555',
+              borderRadius: '50%',
+              width: '44px',
+              height: '44px',
+              fontSize: '20px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(6px)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+              transition: 'background 0.2s'
+            }}
+            title="Show tour instructions"
+            onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.8)'}
+            onMouseLeave={(e) => e.target.style.background = 'rgba(30, 30, 30, 0.8)'}
+          >
+            ?
+          </button>
+        )}
+
       </div>
+
 
       {toast && <Toast message={toast} />}
       

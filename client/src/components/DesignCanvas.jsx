@@ -6,6 +6,8 @@ import {
 } from '@react-three/drei';
 import Furniture from './Furniture';
 import Room from './Room';
+import TourControls from './TourControls';
+
 
 const LIGHT_CONFIG = {
   Day: { ambient: 0.6, sun: [100, 100, 50], sky: true, bg: '#87CEEB' },
@@ -90,14 +92,17 @@ const DesignCanvas = forwardRef(({
         />
       ))}
 
-      {/* --- Controls --- */}
+        {/* --- Controls --- */}
       {mode === 'Tour' ? (
-        <PointerLockControls selector="#tour-overlay" />
+        <>
+          <PointerLockControls selector="#tour-overlay" />
+          <TourControls active={mode === 'Tour'} />
+        </>
       ) : (
         <>
           <OrbitControls 
             makeDefault 
-            enabled={!isDragging} // Disable camera when dragging furniture
+            enabled={!isDragging}
             enableDamping 
             dampingFactor={0.05}
             maxPolarAngle={mode === '2D' ? 0 : Math.PI / 2 - 0.05}
@@ -109,6 +114,8 @@ const DesignCanvas = forwardRef(({
           </GizmoHelper>
         </>
       )}
+
+      
     </Canvas>
   );
 });
