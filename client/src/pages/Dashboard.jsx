@@ -142,7 +142,7 @@ export default function Dashboard() {
 
         </div>
 
-        <DesignCanvas
+           <DesignCanvas
           ref={canvasRef}
           items={items}
           selectedId={selectedId}
@@ -150,7 +150,9 @@ export default function Dashboard() {
           updateItem={updateItem}
           mode={mode}
           roomConfig={roomConfig}
-               />
+          onTourUnlock={() => setShowTourOverlay(true)}
+        />
+
 
                 {/* Tour Mode Overlay - only shows when overlay is active */}
         {mode === 'Tour' && showTourOverlay && (
