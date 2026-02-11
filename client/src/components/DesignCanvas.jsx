@@ -16,9 +16,8 @@ const LIGHT_CONFIG = {
 };
 
 const DesignCanvas = forwardRef(({ 
-  items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock 
+   items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock, onScreenshot  
 }, ref) => {
-
   const canvasRef = useRef();
   
   // State to track if we are currently dragging an object
@@ -97,8 +96,7 @@ const DesignCanvas = forwardRef(({
       {mode === 'Tour' ? (
         <>
           <PointerLockControls selector="#tour-overlay" onUnlock={() => { if (onTourUnlock) onTourUnlock(); }} />
-
-          <TourControls active={mode === 'Tour'} />
+          <TourControls active={mode === 'Tour'} onScreenshot={onScreenshot} />
         </>
       ) : (
         <>
