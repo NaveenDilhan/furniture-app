@@ -1,20 +1,26 @@
 import React from 'react';
-import { Grid } from '@react-three/drei';
+import * as THREE from 'three'; 
+import { useLoader } from '@react-three/fiber'; 
 
-export default function Room({ width, depth, wallColor, floorColor }) {
-  // Floor is centered at (0,0,0)
-  // Walls are positioned based on width/depth
-  
+export default function Room({ width, depth, wallColor }) {
+  // Load the texture
+  const texture = useLoader(THREE.TextureLoader, '/textures/wood_floor.jpg');
+
+  // Configure the texture to repeat (tiling)
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(width / 2, depth / 2);
+  texture.anisotropy = 16;
+  texture.colorSpace = THREE.SRGBColorSpace;
+
   return (
     <group>
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color={floorColor} />
+        <meshStandardMaterial map={texture} />
       </mesh>
       
-      {/* Grid Helper (Optional, overlays on floor) */}
-      <Grid args={[width, depth]} sectionColor="#444" cellColor="#666" position={[0, 0.01, 0]} infiniteGrid={false} />
+      {/* GRID REMOVED HERE: The floor will now be clean wood! */}
 
       {/* Back Wall */}
       <mesh position={[0, 2.5, -depth / 2]} receiveShadow>
@@ -36,3 +42,6 @@ export default function Room({ width, depth, wallColor, floorColor }) {
     </group>
   );
 }
+
+// Preload to prevent blinking
+useLoader.preload(THREE.TextureLoader, '/textures/wood_floor.jpg');

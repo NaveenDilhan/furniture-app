@@ -109,7 +109,7 @@ const DesignCanvas = forwardRef(({
           color="#000000" 
         />
         
-        {!is2D && mode !== 'Tour' && (
+        {/* {!is2D && mode !== 'Tour' && (
           <Grid 
             args={[roomConfig.width, roomConfig.depth]} 
             sectionColor="#6f6f6f" 
@@ -118,7 +118,7 @@ const DesignCanvas = forwardRef(({
             fadeDistance={20} 
             infiniteGrid 
           />
-        )}
+        )} */}
       </group>
 
       {/* --- Furniture --- */}
