@@ -16,7 +16,7 @@ const LIGHT_CONFIG = {
 };
 
 const DesignCanvas = forwardRef(({ 
-  items, selectedId, setSelectedId, updateItem, mode, roomConfig 
+   items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock, onScreenshot  
 }, ref) => {
   const canvasRef = useRef();
   
@@ -95,8 +95,8 @@ const DesignCanvas = forwardRef(({
         {/* --- Controls --- */}
       {mode === 'Tour' ? (
         <>
-          <PointerLockControls selector="#tour-overlay" />
-          <TourControls active={mode === 'Tour'} />
+          <PointerLockControls selector="#tour-overlay" onUnlock={() => { if (onTourUnlock) onTourUnlock(); }} />
+          <TourControls active={mode === 'Tour'} onScreenshot={onScreenshot} />
         </>
       ) : (
         <>

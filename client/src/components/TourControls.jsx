@@ -2,16 +2,20 @@ import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function TourControls({ active }) {
+export default function TourControls({ active, onScreenshot }) {
   const { camera } = useThree();
   const moveState = useRef({ forward: false, backward: false, left: false, right: false });
   const speed = 5;
+  const fovRef = useRef(50); // Default FOV for zoom
 
   useEffect(() => {
     if (!active) return;
 
     // Set camera to eye-level when entering tour
     camera.position.set(0, 1.6, 5);
+    camera.fov = 50;
+    camera.updateProjectionMatrix();
+    fovRef.current = 50;
 
     const onKeyDown = (e) => {
       switch (e.code) {
@@ -19,8 +23,12 @@ export default function TourControls({ active }) {
         case 'KeyS': moveState.current.backward = true; break;
         case 'KeyA': moveState.current.left = true; break;
         case 'KeyD': moveState.current.right = true; break;
+        case 'KeyP':
+          if (onScreenshot) onScreenshot();
+          break;
       }
     };
+
 
     const onKeyUp = (e) => {
       switch (e.code) {
@@ -31,14 +39,28 @@ export default function TourControls({ active }) {
       }
     };
 
+    // Scroll wheel zoom (changes FOV)
+    const onWheel = (e) => {
+      fovRef.current += e.deltaY * 0.05;
+      // Clamp FOV between 20 (zoomed in) and 90 (zoomed out)
+      fovRef.current = Math.max(20, Math.min(90, fovRef.current));
+      camera.fov = fovRef.current;
+      camera.updateProjectionMatrix();
+    };
+
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('wheel', onWheel);
 
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('wheel', onWheel);
       // Reset all movement when leaving tour
       moveState.current = { forward: false, backward: false, left: false, right: false };
+      // Reset FOV back to default
+      camera.fov = 50;
+      camera.updateProjectionMatrix();
     };
   }, [active, camera]);
 

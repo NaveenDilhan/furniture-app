@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 
-// Define the 4 distinct tabs
+// Define the 5 distinct tabs (added SCREENSHOTS)
 const TABS = { 
   LIBRARY: 'library', 
   PROPERTIES: 'properties', 
   ROOM: 'room', 
-  GLOBAL: 'global' 
+  GLOBAL: 'global',
+  SCREENSHOTS: 'screenshots'
 };
 
 export default function Sidebar({ 
   user, onLogout, addItem, selectedId, items, updateItem, deleteItem,
-  roomConfig, setRoomConfig, saveDesign, loadDesigns, downloadScreenshot 
+  roomConfig, setRoomConfig, saveDesign, loadDesigns, downloadScreenshot,
+  screenshots = [], onDownloadScreenshot, onDeleteScreenshot
 }) {
   const [activeTab, setActiveTab] = useState(TABS.LIBRARY);
 
@@ -34,6 +36,7 @@ export default function Sidebar({
         <TabButton label="Edit" icon="🎨" active={activeTab === TABS.PROPERTIES} onClick={() => setActiveTab(TABS.PROPERTIES)} />
         <TabButton label="Room" icon="🏠" active={activeTab === TABS.ROOM} onClick={() => setActiveTab(TABS.ROOM)} />
         <TabButton label="Global" icon="🌍" active={activeTab === TABS.GLOBAL} onClick={() => setActiveTab(TABS.GLOBAL)} />
+        <TabButton label="Shots" icon="📸" active={activeTab === TABS.SCREENSHOTS} onClick={() => setActiveTab(TABS.SCREENSHOTS)} />
       </div>
 
       {/* --- Content Area --- */}
@@ -177,6 +180,76 @@ export default function Sidebar({
             <button className="btn" style={{ width: '100%' }} onClick={downloadScreenshot}>
               📸 Take Screenshot
             </button>
+          </div>
+        )}
+
+        {/* 5. SCREENSHOTS TAB (Gallery) */}
+        {activeTab === TABS.SCREENSHOTS && (
+          <div>
+            <h4 style={{ color: 'white', marginBottom: '15px' }}>Screenshot Gallery</h4>
+            
+            {screenshots.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '40px' }}>
+                No screenshots yet. Use 📸 Take Screenshot in the Global tab or during Tour mode to capture your designs.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {screenshots.map((shot) => (
+                  <div key={shot.id} style={{
+                    background: 'var(--bg-input)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}>
+                    {/* Thumbnail */}
+                    <img 
+                      src={shot.dataUrl} 
+                      alt={shot.name}
+                      style={{ 
+                        width: '100%', 
+                        height: '140px', 
+                        objectFit: 'cover',
+                        display: 'block'
+                      }} 
+                    />
+                    {/* Info & Actions */}
+                    <div style={{ padding: '8px 10px' }}>
+                      <p style={{ 
+                        color: 'white', 
+                        fontSize: '0.85rem', 
+                        margin: '0 0 2px',
+                        fontWeight: 600
+                      }}>
+                        {shot.name}
+                      </p>
+                      <p style={{ 
+                        color: 'var(--text-muted)', 
+                        fontSize: '0.7rem', 
+                        margin: '0 0 8px' 
+                      }}>
+                        {shot.timestamp}
+                      </p>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button 
+                          className="btn btn-primary" 
+                          style={{ flex: 1, fontSize: '0.75rem', padding: '6px' }}
+                          onClick={() => onDownloadScreenshot(shot.dataUrl, shot.name)}
+                        >
+                          ⬇️ Download
+                        </button>
+                        <button 
+                          className="btn btn-danger" 
+                          style={{ fontSize: '0.75rem', padding: '6px 10px' }}
+                          onClick={() => onDeleteScreenshot(shot.id)}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
