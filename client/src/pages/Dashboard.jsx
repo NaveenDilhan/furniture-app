@@ -23,10 +23,10 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [mode, setMode] = useState('3D'); // Modes: 3D, 2D, Tour
+  const [mode, setMode] = useState('3D');
   const [showTourOverlay, setShowTourOverlay] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [screenshots, setScreenshots] = useState([]); // Screenshot gallery
+  const [screenshots, setScreenshots] = useState([]);
 
   const [roomConfig, setRoomConfig] = useState({
     width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
@@ -45,9 +45,9 @@ export default function Dashboard() {
     setMode(newMode);
     if (newMode === 'Tour') {
       setShowTourOverlay(true);
-      setSidebarCollapsed(true); // Auto-collapse sidebar in Tour mode
+      setSidebarCollapsed(true);
     } else {
-      setSidebarCollapsed(false); // Auto-expand sidebar when leaving Tour mode
+      setSidebarCollapsed(false);
     }
   };
 
@@ -58,14 +58,15 @@ export default function Dashboard() {
 
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
+  // Updated addItem for 3D Models
   const addItem = (type) => {
     const newItem = { 
       id: Date.now(), 
       type, 
-      position: [0, 0.5, 0], 
+      position: [0, 0, 0], // Start at center floor
       rotation: [0, 0, 0], 
-      scale: [1, 1, 1], 
-      color: type === 'Lamp' ? '#ffaa00' : '#888888' 
+      scale: [1, 1, 1],
+      // No 'color' prop needed for GLB models
     };
     setItems([...items, newItem]);
     setSelectedId(newItem.id);
@@ -80,7 +81,6 @@ export default function Dashboard() {
     showToast('Item Deleted');
   };
 
-  // Take screenshot and save to gallery
   const takeScreenshot = () => {
     const dataUrl = canvasRef.current?.takeScreenshot();
     if (dataUrl) {
@@ -95,7 +95,6 @@ export default function Dashboard() {
     }
   };
 
-  // Download a screenshot
   const downloadScreenshot = (dataUrl, name) => {
     const link = document.createElement('a');
     link.download = `${name || 'design'}-${Date.now()}.jpg`;
@@ -103,7 +102,6 @@ export default function Dashboard() {
     link.click();
   };
 
-  // Delete a screenshot from gallery
   const deleteScreenshot = (id) => {
     setScreenshots(prev => prev.filter(s => s.id !== id));
     showToast('Screenshot deleted');
@@ -140,7 +138,7 @@ export default function Dashboard() {
   return (
     <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden' }}>
       
-      {/* Sidebar with collapse/expand */}
+      {/* Sidebar */}
       <div style={{
         width: sidebarCollapsed ? '0px' : '320px',
         minWidth: sidebarCollapsed ? '0px' : '320px',
@@ -162,7 +160,6 @@ export default function Dashboard() {
           loadDesigns={loadDesigns}
           downloadScreenshot={() => {
             takeScreenshot();
-            // Also download immediately
             const dataUrl = canvasRef.current?.takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
           }}
@@ -174,34 +171,18 @@ export default function Dashboard() {
 
       <div style={{ flex: 1, position: 'relative', background: '#000' }}>
         
-        {/* Sidebar Toggle Button */}
+        {/* Toggle Sidebar */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           style={{
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            transform: 'translateY(-50%)',
-            zIndex: 15,
-            background: 'rgba(30, 30, 30, 0.85)',
-            color: '#fff',
-            border: '1px solid #555',
-            borderLeft: 'none',
-            borderRadius: '0 8px 8px 0',
-            width: '24px',
-            height: '60px',
-            fontSize: '14px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backdropFilter: 'blur(6px)',
-            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
+            position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
+            zIndex: 15, background: 'rgba(30, 30, 30, 0.85)', color: '#fff',
+            border: '1px solid #555', borderLeft: 'none', borderRadius: '0 8px 8px 0',
+            width: '24px', height: '60px', fontSize: '14px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(6px)', boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
             transition: 'background 0.2s'
           }}
-          title={sidebarCollapsed ? 'Show sidebar' : 'Hide sidebar'}
-          onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.8)'}
-          onMouseLeave={(e) => e.target.style.background = 'rgba(30, 30, 30, 0.85)'}
         >
           {sidebarCollapsed ? '▶' : '◀'}
         </button>
@@ -229,7 +210,7 @@ export default function Dashboard() {
           onScreenshot={takeScreenshot}
         />
 
-        {/* Tour Mode Overlay - only shows when overlay is active */}
+        {/* Tour Overlay Logic (Same as before) */}
         {mode === 'Tour' && showTourOverlay && (
           <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
@@ -239,67 +220,17 @@ export default function Dashboard() {
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚶</div>
             <h2 style={{ color: 'white', margin: '0 0 10px' }}>Virtual Tour Mode</h2>
             <p style={{ color: '#aaa', margin: '0 0 20px', textAlign: 'center' }}>
-              Click anywhere to start walking
-                
-
-              Use <b>W A S D</b> to move around
-                
-
-              Move your <b>mouse</b> to look around
-                
-
-              Use <b>scroll wheel</b> to zoom in/out
-                
-
-              Press <b>P</b> to take a screenshot
-                
-
+              Click anywhere to start walking<br/>
+              Use <b>W A S D</b> to move around<br/>
+              Move your <b>mouse</b> to look around<br/>
+              Use <b>scroll wheel</b> to zoom in/out<br/>
               Press <b>ESC</b> to release cursor
             </p>
-
-            <div style={{
-              padding: '12px 32px', background: '#3b82f6', color: 'white',
-              borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
-            }}>
+            <div style={{ padding: '12px 32px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600 }}>
               Click to Enter Tour
             </div>
           </div>
         )}
-
-        {/* Small Help Button - shows when touring (overlay hidden) */}
-        {mode === 'Tour' && !showTourOverlay && (
-          <button
-            onClick={() => setShowTourOverlay(true)}
-            style={{
-              position: 'absolute',
-              bottom: 20,
-              left: 20,
-              zIndex: 10,
-              background: 'rgba(30, 30, 30, 0.8)',
-              color: '#fff',
-              border: '1px solid #555',
-              borderRadius: '50%',
-              width: '44px',
-              height: '44px',
-              fontSize: '20px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(6px)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-              transition: 'background 0.2s'
-            }}
-            title="Show tour instructions"
-            onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.8)'}
-            onMouseLeave={(e) => e.target.style.background = 'rgba(30, 30, 30, 0.8)'}
-          >
-            ?
-          </button>
-        )}
-
-        
-          
       </div>
 
       {toast && <Toast message={toast} />}
