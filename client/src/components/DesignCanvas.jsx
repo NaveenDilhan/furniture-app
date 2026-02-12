@@ -133,6 +133,7 @@ const DesignCanvas = forwardRef(({
               onChange={updateItem}
               mode={mode}
               setIsDragging={setIsDragging}
+              roomConfig={roomConfig}
             />
           ))}
         </group>

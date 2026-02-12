@@ -1,21 +1,26 @@
 import React, { useRef, useMemo } from 'react';
 import { TransformControls, Html, useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 export default function Furniture({ 
-  data, isSelected, onSelect, onChange, mode, setIsDragging 
+  data, isSelected, onSelect, onChange, mode, setIsDragging, roomConfig 
 }) {
   const { id, type, position, rotation, scale } = data;
   const meshRef = useRef();
   
-  // 1. Load the model based on type
-  // Make sure these files exist in your public/models/ folder!
+  // 1. Load the model
   const modelPath = `/models/${type.toLowerCase()}.glb`;
-  const { scene } = useGLTF(modelPath, true); // true = useDraco if needed
+  const { scene } = useGLTF(modelPath, true); 
 
-  // 2. Clone the scene so we can have multiple instances of the same furniture
+  // 2. Clone scene for multiple instances
   const clone = useMemo(() => scene.clone(), [scene]);
 
   const isEditable = isSelected && mode !== 'Tour';
+
+  // --- BOUNDARY LIMITS ---
+  // We calculate the safe area (Room Size / 2) minus a small buffer (0.5) so it doesn't clip INTO the wall
+  const widthLimit = (roomConfig?.width || 15) / 2 - 0.5;
+  const depthLimit = (roomConfig?.depth || 15) / 2 - 0.5;
 
   return (
     <>
@@ -23,7 +28,26 @@ export default function Furniture({
         <TransformControls
           object={meshRef}
           mode="translate"
+          // 1. Hide the Vertical (Y) Arrow
+          showY={false} 
+          
           onMouseDown={() => setIsDragging && setIsDragging(true)}
+          
+          // 2. REAL-TIME PHYSICS FIX
+          onObjectChange={() => {
+             if (meshRef.current) {
+                const pos = meshRef.current.position;
+
+                // A. Lock to Floor (Never fly)
+                pos.y = 0; 
+
+                // B. Clamp to Walls (Never go through)
+                // If position > Limit, force it to Limit.
+                pos.x = THREE.MathUtils.clamp(pos.x, -widthLimit, widthLimit);
+                pos.z = THREE.MathUtils.clamp(pos.z, -depthLimit, depthLimit);
+             }
+          }}
+
           onMouseUp={() => {
             setIsDragging && setIsDragging(false);
             if (meshRef.current) {
@@ -47,23 +71,21 @@ export default function Furniture({
           onSelect(id);
         }}
       >
-        {/* Render the actual 3D Model */}
         <primitive object={clone} castShadow receiveShadow />
 
-        {/* Selection Box (Outline equivalent for complex models) */}
+        {/* Selection Box */}
         {isSelected && (
           <mesh visible={false}>
-            <boxGeometry args={[1, 1, 1]} /> {/* Hitbox proxy if needed */}
-            {/* Visual indicator handled by TransformControls, or you can add a BoxHelper here */}
+            <boxGeometry args={[1, 1, 1]} /> 
           </mesh>
         )}
 
-        {/* Light source attached to Lamps */}
+        {/* Lamp Light */}
         {type === 'Lamp' && (
           <pointLight position={[0, 1.5, 0]} intensity={3} distance={5} color="#ffddaa" castShadow />
         )}
 
-        {/* Floating Label */}
+        {/* Label */}
         {isSelected && (
           <Html position={[0, 2, 0]} center>
             <div style={{ 
