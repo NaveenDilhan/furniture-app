@@ -1,151 +1,63 @@
 import React, { useState } from 'react';
 
-export default function LoginBox({ onLogin, onRegister }) {
-  const [view, setView] = useState('login'); // 'login', 'register', or 'forgot'
-  const [formData, setFormData] = useState({ 
-    username: '', 
-    email: '',
-    password: '', 
-    confirmPassword: '' 
-  });
+export default function LoginBox({ onLogin, onRegister, role }) {
+  const [view, setView] = useState('login'); // 'login', 'register', 'forgot'
+  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setError(''); 
+    setError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-
     if (view === 'register') {
-      if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match!");
-        return;
-      }
+      if (formData.password !== formData.confirmPassword) return setError("Passwords match error");
       onRegister(formData.username, formData.email, formData.password);
     } else if (view === 'login') {
       onLogin(formData.username, formData.password);
-    } else if (view === 'forgot') {
-      // Mock logic for sending reset link
-      alert(`Password reset link sent to: ${formData.email}`);
+    } else {
+      alert(`Reset link sent to ${formData.email}`);
       setView('login');
     }
-  };
-
-  const switchView = (newView) => {
-    setView(newView);
-    setError('');
-    setFormData({ username: '', email: '', password: '', confirmPassword: '' });
   };
 
   return (
     <div style={styles.card}>
       <div style={styles.header}>
-        <h2 style={styles.title}>
-          {view === 'login' && 'Welcome'}
-          {view === 'register' && 'Create Account'}
-          {view === 'forgot' && 'Reset Password'}
-        </h2>
-        <p style={styles.subtitle}>
-          {view === 'login' && 'Login to manage your design portfolio'}
-          {view === 'register' && 'Join our furniture design community'}
-          {view === 'forgot' && 'Enter your email to receive a recovery link'}
-        </p>
+        <div style={styles.badge}>{role} Access</div>
+        <h2 style={styles.title}>{view === 'login' ? 'Welcome Back' : view === 'register' ? 'Create Account' : 'Reset Password'}</h2>
       </div>
-      
-      {error && <div style={styles.errorAlert}>{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Username field: Hidden during 'forgot password' */}
         {view !== 'forgot' && (
-          <>
-            <label style={styles.label}>Username</label>
-            <input
-              name="username"
-              placeholder="Enter your username"
-              value={formData.username}
-              style={styles.input}
-              onChange={handleChange}
-              required
-            />
-          </>
+          <input name="username" placeholder="Username" style={styles.input} onChange={handleChange} required />
         )}
-
-        {/* Email field: Required for Register and Forgot Password */}
         {(view === 'register' || view === 'forgot') && (
-          <>
-            <label style={styles.label}>Email Address</label>
-            <input
-              name="email"
-              type="email"
-              placeholder="name@example.com"
-              value={formData.email}
-              style={styles.input}
-              onChange={handleChange}
-              required
-            />
-          </>
+          <input name="email" type="email" placeholder="Email Address" style={styles.input} onChange={handleChange} required />
         )}
-
-        {/* Password field: Hidden during 'forgot password' */}
         {view !== 'forgot' && (
-          <>
-            <label style={styles.label}>Password</label>
-            <input
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              style={styles.input}
-              onChange={handleChange}
-              required
-            />
-          </>
+          <input name="password" type="password" placeholder="Password" style={styles.input} onChange={handleChange} required />
         )}
-        
-        {/* Confirm Password: Only for Registration */}
         {view === 'register' && (
-          <>
-            <label style={styles.label}>Confirm Password</label>
-            <input
-              name="confirmPassword"
-              type="password"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              style={styles.input}
-              onChange={handleChange}
-              required
-            />
-          </>
+          <input name="confirmPassword" type="password" placeholder="Confirm Password" style={styles.input} onChange={handleChange} required />
         )}
 
-        {/* Forgot Password Link: Only on Login view */}
         {view === 'login' && (
-          <div style={{ textAlign: 'right', marginBottom: '15px' }}>
-            <button type="button" onClick={() => switchView('forgot')} style={styles.smallLink}>
-              Forgot Password?
-            </button>
+          <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+            <span onClick={() => setView('forgot')} style={styles.smallLink}>Forgot Password?</span>
           </div>
         )}
 
         <button type="submit" style={styles.btn}>
-          {view === 'login' && 'Sign In'}
-          {view === 'register' && 'Create Account'}
-          {view === 'forgot' && 'Send Reset Link'}
+          {view === 'login' ? 'Sign In' : view === 'register' ? 'Sign Up' : 'Send Reset Link'}
         </button>
       </form>
 
       <div style={styles.footer}>
-        <span style={{ color: '#94a3b8' }}>
-          {view === 'login' ? "Don't have an account?" : "Back to"}
-        </span>
-        <button 
-          onClick={() => switchView(view === 'login' ? 'register' : 'login')} 
-          style={styles.linkBtn}
-        >
-          {view === 'login' ? 'Create an Account' : 'Sign In'}
+        <button onClick={() => setView(view === 'login' ? 'register' : 'login')} style={styles.linkBtn}>
+          {view === 'login' ? 'New here? Create Account' : 'Already have an account? Sign In'}
         </button>
       </div>
     </div>
@@ -153,54 +65,13 @@ export default function LoginBox({ onLogin, onRegister }) {
 }
 
 const styles = {
-  card: { 
-    width: '400px', 
-    padding: '40px', 
-    background: '#1e293b', 
-    borderRadius: '16px', 
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', 
-    border: '1px solid #334155' 
-  },
-  header: { marginBottom: '32px', textAlign: 'center' },
-  title: { color: '#f8fafc', fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0' },
-  subtitle: { color: '#94a3b8', fontSize: '14px', margin: 0 },
-  label: { display: 'block', color: '#cbd5e1', fontSize: '14px', marginBottom: '8px', fontWeight: '500' },
-  input: { 
-    display: 'block', 
-    width: '100%', 
-    padding: '12px 16px', 
-    marginBottom: '15px', 
-    borderRadius: '8px', 
-    border: '1px solid #334155', 
-    background: '#0f172a', 
-    color: 'white', 
-    boxSizing: 'border-box', 
-    fontSize: '16px', 
-    outline: 'none' 
-  },
-  btn: { 
-    width: '100%', 
-    padding: '14px', 
-    marginTop: '10px', 
-    cursor: 'pointer', 
-    background: '#10b981', // Professional Emerald Green
-    color: 'white', 
-    border: 'none', 
-    borderRadius: '8px', 
-    fontWeight: '600', 
-    fontSize: '16px' 
-  },
-  linkBtn: { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontWeight: '600', marginLeft: '8px' },
-  smallLink: { background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline' },
-  footer: { marginTop: '24px', textAlign: 'center', fontSize: '14px' },
-  errorAlert: { 
-    background: 'rgba(239, 68, 68, 0.2)', 
-    color: '#fca5a5', 
-    padding: '12px', 
-    borderRadius: '8px', 
-    marginBottom: '20px', 
-    textAlign: 'center', 
-    fontSize: '14px', 
-    border: '1px solid rgba(239, 68, 68, 0.4)' 
-  }
+  card: { width: '380px', padding: '40px', background: '#1e293b', borderRadius: '16px', border: '1px solid #334155', boxShadow: '0 20px 40px rgba(0,0,0,0.4)' },
+  header: { textAlign: 'center', marginBottom: '30px' },
+  badge: { display: 'inline-block', padding: '5px 12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '20px', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '10px', border: '1px solid rgba(16, 185, 129, 0.3)' },
+  title: { color: 'white', fontSize: '24px', margin: 0 },
+  input: { display: 'block', width: '100%', padding: '12px', marginBottom: '15px', borderRadius: '8px', border: '1px solid #334155', background: '#0f172a', color: 'white', boxSizing: 'border-box' },
+  btn: { width: '100%', padding: '14px', background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' },
+  smallLink: { color: '#94a3b8', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline' },
+  footer: { marginTop: '20px', textAlign: 'center' },
+  linkBtn: { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontSize: '14px' }
 };

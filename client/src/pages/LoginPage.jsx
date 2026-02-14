@@ -1,73 +1,61 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import LoginBox from '../components/LoginBox';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  // --- LOGIN LOGIC ---
-  const handleLogin = async (username, password) => {
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        // Securely store user session (JWT)
-        localStorage.setItem('user', JSON.stringify(data));
-        navigate('/dashboard');
-      } else {
-        alert("Login Failed: " + data.message);
-      }
-    } catch (err) { 
-      console.error(err);
-      alert('Server Connection Error. Is the backend running?'); 
-    }
-  };
-
-  // --- REGISTRATION LOGIC ---
-  const handleRegister = async (username, email, password) => {
-    try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password }),
-      });
-      const data = await res.json();
-      
-      if (data.success) {
-        alert("Registration Successful! Please login with your new account.");
-        window.location.reload(); 
-      } else {
-        alert("Registration Failed: " + (data.message || "User likely exists"));
-      }
-    } catch (err) { 
-      console.error(err);
-      alert('Registration Server Error'); 
-    }
-  };
+  const location = useLocation();
+  
+  // Capture the role from navigation state
+  const selectedRole = location.state?.role || 'User';
 
   return (
     <div style={pageStyles.wrapper}>
-      <LoginBox onLogin={handleLogin} onRegister={handleRegister} />
+      {/* Professional Square Back Button */}
+      <button 
+        onClick={() => navigate('/')} 
+        style={pageStyles.squareBtn}
+        title="Back to Role Selection"
+      >
+        ←
+      </button>
+
+      <LoginBox 
+        onLogin={(u, p) => console.log("Login", u, p)} 
+        onRegister={(u, e, p) => console.log("Register", u, e, p)} 
+        role={selectedRole} 
+      />
     </div>
   );
 }
 
 const pageStyles = {
-  wrapper: {
+  wrapper: { 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    minHeight: '100vh', 
+    width: '100vw', 
+    backgroundColor: '#0f172a', 
+    backgroundImage: 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)',
+    position: 'relative'
+  },
+  squareBtn: {
+    position: 'absolute',
+    top: '15px', // Closer to the top header
+    left: '15px', // Closer to the side
+    width: '40px',
+    height: '40px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    minHeight: '100vh',
-    width: '100vw',
-    backgroundColor: '#0f172a', // Professional deep navy/slate
-    backgroundImage: 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)',
-    margin: 0,
-    padding: 0,
-    overflow: 'hidden'
+    background: '#1e293b', // Matches the LoginBox background
+    border: '1px solid #334155',
+    borderRadius: '8px', // Slightly rounded corners for a modern look
+    color: '#94a3b8',
+    fontSize: '20px',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    outline: 'none',
   }
 };
