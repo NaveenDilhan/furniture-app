@@ -27,6 +27,7 @@ export default function Dashboard() {
   const [showTourOverlay, setShowTourOverlay] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [screenshots, setScreenshots] = useState([]); // Screenshot gallery
+  const [tourActive, setTourActive] = useState(false); // Track if pointer lock is active
 
   const [roomConfig, setRoomConfig] = useState({
     width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
@@ -45,9 +46,11 @@ export default function Dashboard() {
     setMode(newMode);
     if (newMode === 'Tour') {
       setShowTourOverlay(true);
-      setSidebarCollapsed(true); // Auto-collapse sidebar in Tour mode
+      setSidebarCollapsed(true);
+      setTourActive(false);
     } else {
-      setSidebarCollapsed(false); // Auto-expand sidebar when leaving Tour mode
+      setSidebarCollapsed(false);
+      setTourActive(false);
     }
   };
 
@@ -109,6 +112,23 @@ export default function Dashboard() {
     showToast('Screenshot deleted');
   };
 
+  // Handle tour unlock (ESC pressed)
+  const handleTourUnlock = () => {
+    setShowTourOverlay(true);
+    setTourActive(false);
+  };
+
+  // Handle entering tour (overlay clicked)
+  const handleEnterTour = () => {
+    setShowTourOverlay(false);
+    setTourActive(true);
+  };
+
+  // Exit tour mode completely
+  const handleExitTour = () => {
+    handleModeChange('3D');
+  };
+
   const handleSaveSubmit = async (designName) => {
     const thumbnail = canvasRef.current?.takeScreenshot() || '';
     try {
@@ -162,7 +182,6 @@ export default function Dashboard() {
           loadDesigns={loadDesigns}
           downloadScreenshot={() => {
             takeScreenshot();
-            // Also download immediately
             const dataUrl = canvasRef.current?.takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
           }}
@@ -226,80 +245,208 @@ export default function Dashboard() {
           updateItem={updateItem}
           mode={mode}
           roomConfig={roomConfig}
+          onTourUnlock={handleTourUnlock}
           onScreenshot={takeScreenshot}
         />
 
-        {/* Tour Mode Overlay - only shows when overlay is active */}
+        {/* Crosshair - visible when tour is active and overlay is hidden */}
+        {mode === 'Tour' && tourActive && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 5,
+            pointerEvents: 'none'
+          }}>
+            {/* Horizontal line */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '20px',
+              height: '2px',
+              background: 'rgba(255, 255, 255, 0.6)',
+              borderRadius: '1px'
+            }} />
+            {/* Vertical line */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '2px',
+              height: '20px',
+              background: 'rgba(255, 255, 255, 0.6)',
+              borderRadius: '1px'
+            }} />
+            {/* Center dot */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '4px',
+              height: '4px',
+              background: 'rgba(255, 255, 255, 0.8)',
+              borderRadius: '50%'
+            }} />
+          </div>
+        )}
+
+        {/* Tour Mode Overlay */}
         {mode === 'Tour' && showTourOverlay && (
-          <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={{
+          <div id="tour-overlay" onClick={handleEnterTour} style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.7)', cursor: 'pointer', zIndex: 2
+            background: 'rgba(0,0,0,0.75)', cursor: 'pointer', zIndex: 2
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚶</div>
-            <h2 style={{ color: 'white', margin: '0 0 10px' }}>Virtual Tour Mode</h2>
-            <p style={{ color: '#aaa', margin: '0 0 20px', textAlign: 'center' }}>
-              Click anywhere to start walking
-                
-
-              Use <b>W A S D</b> to move around
-                
-
-              Move your <b>mouse</b> to look around
-                
-
-              Use <b>scroll wheel</b> to zoom in/out
-                
-
-              Press <b>P</b> to take a screenshot
-                
-
-              Press <b>ESC</b> to release cursor
-            </p>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>🚶</div>
+            <h2 style={{ color: 'white', margin: '0 0 16px', fontSize: '1.5rem' }}>Virtual Tour Mode</h2>
+            
+            <div style={{
+              background: 'rgba(255,255,255,0.08)',
+              borderRadius: '12px',
+              padding: '16px 28px',
+              marginBottom: '20px',
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <table style={{ color: '#ccc', fontSize: '0.9rem', borderCollapse: 'collapse' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>W</kbd> <kbd style={kbdStyle}>A</kbd> <kbd style={kbdStyle}>S</kbd> <kbd style={kbdStyle}>D</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Move around</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>Mouse</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Look around</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>Shift</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Sprint (move faster)</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>Scroll</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Zoom in / out</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>P</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Take screenshot</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '4px 16px 4px 0', textAlign: 'right' }}>
+                      <kbd style={kbdStyle}>ESC</kbd>
+                    </td>
+                    <td style={{ padding: '4px 0' }}>Release cursor</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             <div style={{
               padding: '12px 32px', background: '#3b82f6', color: 'white',
-              borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
+              borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600,
+              boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+              transition: 'transform 0.2s, box-shadow 0.2s'
             }}>
               Click to Enter Tour
             </div>
           </div>
         )}
 
-        {/* Small Help Button - shows when touring (overlay hidden) */}
+        {/* Tour HUD - shows when actively touring */}
         {mode === 'Tour' && !showTourOverlay && (
-          <button
-            onClick={() => setShowTourOverlay(true)}
-            style={{
-              position: 'absolute',
-              bottom: 20,
-              left: 20,
-              zIndex: 10,
-              background: 'rgba(30, 30, 30, 0.8)',
-              color: '#fff',
-              border: '1px solid #555',
-              borderRadius: '50%',
-              width: '44px',
-              height: '44px',
-              fontSize: '20px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backdropFilter: 'blur(6px)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
-              transition: 'background 0.2s'
-            }}
-            title="Show tour instructions"
-            onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.8)'}
-            onMouseLeave={(e) => e.target.style.background = 'rgba(30, 30, 30, 0.8)'}
-          >
-            ?
-          </button>
-        )}
+          <>
+            {/* Help Button (bottom-left) */}
+            <button
+              onClick={() => setShowTourOverlay(true)}
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                left: 20,
+                zIndex: 10,
+                background: 'rgba(30, 30, 30, 0.8)',
+                color: '#fff',
+                border: '1px solid #555',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backdropFilter: 'blur(6px)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                transition: 'background 0.2s'
+              }}
+              title="Show controls"
+              onMouseEnter={(e) => e.target.style.background = 'rgba(59, 130, 246, 0.8)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(30, 30, 30, 0.8)'}
+            >
+              ?
+            </button>
 
-        
-          
+            {/* Exit Tour Button (bottom-right) */}
+            <button
+              onClick={handleExitTour}
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                right: 20,
+                zIndex: 10,
+                background: 'rgba(239, 68, 68, 0.8)',
+                color: '#fff',
+                border: '1px solid rgba(239, 68, 68, 0.6)',
+                borderRadius: '8px',
+                padding: '8px 16px',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backdropFilter: 'blur(6px)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+                transition: 'background 0.2s'
+              }}
+              title="Exit tour mode"
+              onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 1)'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(239, 68, 68, 0.8)'}
+            >
+              ✕ Exit Tour
+            </button>
+
+            {/* Tour Mode Label (top-right) */}
+            <div style={{
+              position: 'absolute',
+              top: 20,
+              right: 20,
+              zIndex: 10,
+              background: 'rgba(30, 30, 30, 0.7)',
+              color: '#aaa',
+              borderRadius: '8px',
+              padding: '6px 12px',
+              fontSize: '0.75rem',
+              backdropFilter: 'blur(6px)',
+              border: '1px solid #444',
+              pointerEvents: 'none'
+            }}>
+              🚶 Tour Mode &nbsp;|&nbsp; Room: {roomConfig.width}m × {roomConfig.depth}m
+            </div>
+          </>
+        )}
       </div>
 
       {toast && <Toast message={toast} />}
@@ -314,3 +461,15 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Keyboard key style for the overlay instructions
+const kbdStyle = {
+  background: 'rgba(255,255,255,0.15)',
+  border: '1px solid rgba(255,255,255,0.25)',
+  borderRadius: '4px',
+  padding: '2px 8px',
+  fontSize: '0.8rem',
+  fontFamily: 'monospace',
+  color: '#fff',
+  fontWeight: 600
+};

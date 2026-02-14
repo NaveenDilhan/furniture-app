@@ -16,12 +16,11 @@ const LIGHT_CONFIG = {
 };
 
 const DesignCanvas = forwardRef(({ 
-   items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock, onScreenshot  
+  items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock, onScreenshot 
 }, ref) => {
   const canvasRef = useRef();
   
   // State to track if we are currently dragging an object
-  // When dragging, we disable the camera orbit to prevent dizziness
   const [isDragging, setIsDragging] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -38,7 +37,6 @@ const DesignCanvas = forwardRef(({
       gl={{ preserveDrawingBuffer: true, antialias: true }}
       ref={canvasRef}
       onPointerMissed={() => {
-        // Only deselect if we aren't dragging
         if (!isDragging) setSelectedId(null);
       }}
     >
@@ -88,15 +86,23 @@ const DesignCanvas = forwardRef(({
           onSelect={setSelectedId}
           onChange={updateItem}
           mode={mode}
-          setIsDragging={setIsDragging} // Pass this down
+          setIsDragging={setIsDragging}
         />
       ))}
 
-        {/* --- Controls --- */}
+      {/* --- Controls --- */}
       {mode === 'Tour' ? (
         <>
-          <PointerLockControls selector="#tour-overlay" onUnlock={() => { if (onTourUnlock) onTourUnlock(); }} />
-          <TourControls active={mode === 'Tour'} onScreenshot={onScreenshot} />
+          <PointerLockControls 
+            selector="#tour-overlay" 
+            onUnlock={() => { if (onTourUnlock) onTourUnlock(); }} 
+          />
+          <TourControls 
+            active={mode === 'Tour'} 
+            onScreenshot={onScreenshot}
+            roomWidth={roomConfig.width}
+            roomDepth={roomConfig.depth}
+          />
         </>
       ) : (
         <>
