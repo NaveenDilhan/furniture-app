@@ -1,45 +1,55 @@
-import React, { useRef, useEffect } from 'react';
-import { TransformControls, Html, Outlines } from '@react-three/drei';
+import React, { useRef, useMemo } from 'react';
+import { TransformControls, Html, useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 export default function Furniture({ 
-  data, isSelected, onSelect, onChange, mode, setIsDragging 
+  data, isSelected, onSelect, onChange, mode, setIsDragging, roomConfig 
 }) {
-  const { id, type, position, rotation, scale, color } = data;
+  const { id, type, position, rotation, scale } = data;
   const meshRef = useRef();
-  const controlsRef = useRef();
+  
+  // 1. Load the model
+  const modelPath = `/models/${type.toLowerCase()}.glb`;
+  const { scene } = useGLTF(modelPath, true); 
 
-  // Define geometry based on type
-  const getGeometry = () => {
-    switch (type) {
-      case 'Table': return <boxGeometry args={[1.5, 0.1, 1]} />;
-      case 'Chair': return <cylinderGeometry args={[0.3, 0.3, 1, 16]} />;
-      case 'Bed': return <boxGeometry args={[2, 0.5, 3]} />;
-      case 'Cabinet': return <boxGeometry args={[1, 2, 0.8]} />;
-      case 'Lamp': return <coneGeometry args={[0.3, 1, 32]} />;
-      case 'Sofa': return <boxGeometry args={[2.5, 0.6, 1]} />;
-      default: return <boxGeometry args={[0.5, 0.5, 0.5]} />;
-    }
-  };
+  // 2. Clone scene for multiple instances
+  const clone = useMemo(() => scene.clone(), [scene]);
 
   const isEditable = isSelected && mode !== 'Tour';
+
+  // --- BOUNDARY LIMITS ---
+  // We calculate the safe area (Room Size / 2) minus a small buffer (0.5) so it doesn't clip INTO the wall
+  const widthLimit = (roomConfig?.width || 15) / 2 - 0.5;
+  const depthLimit = (roomConfig?.depth || 15) / 2 - 0.5;
 
   return (
     <>
       {isEditable && (
         <TransformControls
-          ref={controlsRef}
           object={meshRef}
-          mode="translate" // Allows dragging on axes or planes
+          mode="translate"
+          // 1. Hide the Vertical (Y) Arrow
+          showY={false} 
           
-          // Disable camera orbit when dragging starts
-          onMouseDown={() => {
-            if (setIsDragging) setIsDragging(true);
+          onMouseDown={() => setIsDragging && setIsDragging(true)}
+          
+          // 2. REAL-TIME PHYSICS FIX
+          onObjectChange={() => {
+             if (meshRef.current) {
+                const pos = meshRef.current.position;
+
+                // A. Lock to Floor (Never fly)
+                pos.y = 0; 
+
+                // B. Clamp to Walls (Never go through)
+                // If position > Limit, force it to Limit.
+                pos.x = THREE.MathUtils.clamp(pos.x, -widthLimit, widthLimit);
+                pos.z = THREE.MathUtils.clamp(pos.z, -depthLimit, depthLimit);
+             }
           }}
-          
-          // Commit changes to state only when dragging ends (Optimization)
+
           onMouseUp={() => {
-            if (setIsDragging) setIsDragging(false);
-            
+            setIsDragging && setIsDragging(false);
             if (meshRef.current) {
               onChange(id, {
                 position: meshRef.current.position.toArray(),
@@ -56,34 +66,32 @@ export default function Furniture({
         position={position} 
         rotation={rotation} 
         scale={scale} 
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelect(id);
+        }}
       >
-        <mesh
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(id);
-          }}
-          castShadow
-          receiveShadow
-        >
-          {getGeometry()}
-          <meshStandardMaterial color={color} roughness={0.3} metalness={0.1} />
-          
-          {/* Highlight Selection Outline */}
-          {isSelected && <Outlines thickness={2} color="#3b82f6" />}
-        </mesh>
+        <primitive object={clone} castShadow receiveShadow />
 
-        {/* Light source for Lamps */}
-        {type === 'Lamp' && (
-          <pointLight position={[0, 0.5, 0]} intensity={2} distance={8} color="#ffddaa" castShadow />
+        {/* Selection Box */}
+        {isSelected && (
+          <mesh visible={false}>
+            <boxGeometry args={[1, 1, 1]} /> 
+          </mesh>
         )}
 
-        {/* Label on hover or select */}
+        {/* Lamp Light */}
+        {type === 'Lamp' && (
+          <pointLight position={[0, 1.5, 0]} intensity={3} distance={5} color="#ffddaa" castShadow />
+        )}
+
+        {/* Label */}
         {isSelected && (
-          <Html position={[0, 1.5, 0]} center>
+          <Html position={[0, 2, 0]} center>
             <div style={{ 
               background: '#3b82f6', color: 'white', padding: '4px 8px', 
               borderRadius: '4px', fontSize: '12px', pointerEvents: 'none',
-              whiteSpace: 'nowrap'
+              whiteSpace: 'nowrap', boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
             }}>
               {type}
             </div>
