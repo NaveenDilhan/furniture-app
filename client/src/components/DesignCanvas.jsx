@@ -1,4 +1,4 @@
-import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { 
   OrbitControls, PointerLockControls, Sky, Stars, 
@@ -7,6 +7,7 @@ import {
 import Furniture from './Furniture';
 import Room from './Room';
 import TourControls from './TourControls';
+import FurnitureInfo from './FurnitureInfo';
 
 
 const LIGHT_CONFIG = {
@@ -16,7 +17,8 @@ const LIGHT_CONFIG = {
 };
 
 const DesignCanvas = forwardRef(({ 
-  items, selectedId, setSelectedId, updateItem, mode, roomConfig, onTourUnlock, onScreenshot 
+  items, selectedId, setSelectedId, updateItem, mode, roomConfig, 
+  onTourUnlock, onScreenshot, onHoverFurniture, onPlayerMove, onToggleMinimap 
 }, ref) => {
   const canvasRef = useRef();
   
@@ -87,6 +89,7 @@ const DesignCanvas = forwardRef(({
           onChange={updateItem}
           mode={mode}
           setIsDragging={setIsDragging}
+          roomConfig={roomConfig}
         />
       ))}
 
@@ -102,6 +105,13 @@ const DesignCanvas = forwardRef(({
             onScreenshot={onScreenshot}
             roomWidth={roomConfig.width}
             roomDepth={roomConfig.depth}
+            onPlayerMove={onPlayerMove}
+            onToggleMinimap={onToggleMinimap}
+          />
+          <FurnitureInfo
+            active={mode === 'Tour'}
+            items={items}
+            onHoverItem={onHoverFurniture}
           />
         </>
       ) : (

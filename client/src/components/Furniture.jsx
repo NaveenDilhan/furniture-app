@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { TransformControls, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -15,10 +15,25 @@ export default function Furniture({
   // 2. Clone scene for multiple instances
   const clone = useMemo(() => scene.clone(), [scene]);
 
+  // 3. Tag all meshes in this furniture with the furniture ID for raycasting
+  useEffect(() => {
+    if (meshRef.current) {
+      // Tag the group itself
+      meshRef.current.userData.furnitureId = id;
+      
+      // Tag all child meshes so raycasting can identify them
+      meshRef.current.traverse((child) => {
+        if (child.isMesh) {
+          child.userData.furnitureId = id;
+          child.userData.furnitureType = type;
+        }
+      });
+    }
+  }, [id, type, clone]);
+
   const isEditable = isSelected && mode !== 'Tour';
 
   // --- BOUNDARY LIMITS ---
-  // We calculate the safe area (Room Size / 2) minus a small buffer (0.5) so it doesn't clip INTO the wall
   const widthLimit = (roomConfig?.width || 15) / 2 - 0.5;
   const depthLimit = (roomConfig?.depth || 15) / 2 - 0.5;
 
@@ -28,21 +43,14 @@ export default function Furniture({
         <TransformControls
           object={meshRef}
           mode="translate"
-          // 1. Hide the Vertical (Y) Arrow
           showY={false} 
           
           onMouseDown={() => setIsDragging && setIsDragging(true)}
           
-          // 2. REAL-TIME PHYSICS FIX
           onObjectChange={() => {
              if (meshRef.current) {
                 const pos = meshRef.current.position;
-
-                // A. Lock to Floor (Never fly)
                 pos.y = 0; 
-
-                // B. Clamp to Walls (Never go through)
-                // If position > Limit, force it to Limit.
                 pos.x = THREE.MathUtils.clamp(pos.x, -widthLimit, widthLimit);
                 pos.z = THREE.MathUtils.clamp(pos.z, -depthLimit, depthLimit);
              }
