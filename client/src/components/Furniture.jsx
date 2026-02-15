@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { TransformControls, Html, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -15,21 +15,16 @@ export default function Furniture({
   // 2. Clone scene for multiple instances
   const clone = useMemo(() => scene.clone(), [scene]);
 
-  // 3. Tag all meshes in this furniture with the furniture ID for raycasting
-  useEffect(() => {
-    if (meshRef.current) {
-      // Tag the group itself
-      meshRef.current.userData.furnitureId = id;
-      
-      // Tag all child meshes so raycasting can identify them
-      meshRef.current.traverse((child) => {
-        if (child.isMesh) {
-          child.userData.furnitureId = id;
-          child.userData.furnitureType = type;
-        }
-      });
-    }
-  }, [id, type, clone]);
+    // 3. Tag all meshes in this furniture with the furniture ID for raycasting
+  // Using useMemo on clone to tag immediately when clone is created
+  useMemo(() => {
+    clone.userData.furnitureId = id;
+    clone.userData.furnitureType = type;
+    clone.traverse((child) => {
+      child.userData.furnitureId = id;
+      child.userData.furnitureType = type;
+    });
+  }, [clone, id, type]);
 
   const isEditable = isSelected && mode !== 'Tour';
 
