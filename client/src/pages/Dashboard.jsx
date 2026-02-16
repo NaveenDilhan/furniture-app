@@ -58,19 +58,28 @@ export default function Dashboard() {
 
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
-  // Updated addItem for 3D Models
-  const addItem = (type) => {
+  // --- FIXED ADD ITEM FUNCTION ---
+  const addItem = (itemData) => {
     const newItem = { 
-      id: Date.now(), 
-      type, 
-      position: [0, 0, 0], // Start at center floor
+      id: Date.now(), // Generate unique ID for the scene
+      position: [0, 0, 0], 
       rotation: [0, 0, 0], 
       scale: [1, 1, 1],
-      // No 'color' prop needed for GLB models
     };
+
+    if (typeof itemData === 'object') {
+      // It's a full item from the Database/Library
+      // We spread itemData to get properties like modelUrl, name, type
+      Object.assign(newItem, itemData, { id: Date.now() }); 
+    } else {
+      // Fallback for string inputs (legacy support)
+      newItem.type = itemData;
+      newItem.name = itemData;
+    }
+
     setItems([...items, newItem]);
     setSelectedId(newItem.id);
-    showToast(`Added ${type}`);
+    showToast(`Added ${newItem.name || newItem.type}`);
   };
 
   const updateItem = (id, data) => setItems(prev => prev.map(i => i.id === id ? {...i, ...data} : i));
@@ -210,7 +219,7 @@ export default function Dashboard() {
           onScreenshot={takeScreenshot}
         />
 
-        {/* Tour Overlay Logic (Same as before) */}
+        {/* Tour Overlay Logic */}
         {mode === 'Tour' && showTourOverlay && (
           <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
