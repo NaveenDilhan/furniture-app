@@ -1,5 +1,5 @@
-import React, { useRef, useState, forwardRef, useImperativeHandle, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { 
   OrbitControls, PointerLockControls, Sky, Stars, 
   GizmoHelper, GizmoViewport, SoftShadows, Grid 
@@ -7,8 +7,6 @@ import {
 import Furniture from './Furniture';
 import Room from './Room';
 import TourControls from './TourControls';
-import FurnitureInfo from './FurnitureInfo';
-
 
 const LIGHT_CONFIG = {
   Day: { ambient: 0.6, sun: [100, 100, 50], sky: true, bg: '#87CEEB' },
@@ -16,9 +14,27 @@ const LIGHT_CONFIG = {
   Night: { ambient: 0.1, sun: [0, -10, 0], sky: false, bg: '#111111' },
 };
 
+// Component inside Canvas that resets camera when triggered
+function CameraResetter({ resetTrigger }) {
+  const { camera } = useThree();
+  const orbitRef = useRef();
+
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      // Reset camera to default 3D view position
+      camera.position.set(10, 10, 10);
+      camera.fov = 50;
+      camera.updateProjectionMatrix();
+      camera.lookAt(0, 0, 0);
+    }
+  }, [resetTrigger, camera]);
+
+  return null;
+}
+
 const DesignCanvas = forwardRef(({ 
   items, selectedId, setSelectedId, updateItem, mode, roomConfig, 
-  onTourUnlock, onScreenshot, onHoverFurniture, onPlayerMove, onToggleMinimap 
+  onTourUnlock, onScreenshot, resetCamera
 }, ref) => {
   const canvasRef = useRef();
   
@@ -38,11 +54,15 @@ const DesignCanvas = forwardRef(({
       camera={{ position: [10, 10, 10], fov: 50 }}
       gl={{ preserveDrawingBuffer: true, antialias: true }}
       ref={canvasRef}
+      style={{ width: '100%', height: '100%' }}
       onPointerMissed={() => {
         if (!isDragging) setSelectedId(null);
       }}
     >
       <color attach="background" args={[config.bg]} />
+      
+      {/* Camera reset handler */}
+      <CameraResetter resetTrigger={resetCamera || 0} />
       
       {/* --- Environment --- */}
       <ambientLight intensity={config.ambient} />
@@ -105,13 +125,6 @@ const DesignCanvas = forwardRef(({
             onScreenshot={onScreenshot}
             roomWidth={roomConfig.width}
             roomDepth={roomConfig.depth}
-            onPlayerMove={onPlayerMove}
-            onToggleMinimap={onToggleMinimap}
-          />
-          <FurnitureInfo
-            active={mode === 'Tour'}
-            items={items}
-            onHoverItem={onHoverFurniture}
           />
         </>
       ) : (
@@ -130,8 +143,6 @@ const DesignCanvas = forwardRef(({
           </GizmoHelper>
         </>
       )}
-
-      
     </Canvas>
   );
 });
