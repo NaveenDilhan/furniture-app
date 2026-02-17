@@ -77,9 +77,20 @@ export default function Dashboard() {
       scale: [1, 1, 1], 
       color: type === 'Lamp' ? '#ffaa00' : '#888888' 
     };
+
+    if (typeof itemData === 'object') {
+      // It's a full item from the Database/Library
+      // We spread itemData to get properties like modelUrl, name, type
+      Object.assign(newItem, itemData, { id: Date.now() }); 
+    } else {
+      // Fallback for string inputs (legacy support)
+      newItem.type = itemData;
+      newItem.name = itemData;
+    }
+
     setItems([...items, newItem]);
     setSelectedId(newItem.id);
-    showToast(`Added ${type}`);
+    showToast(`Added ${newItem.name || newItem.type}`);
   };
 
   const updateItem = (id, data) => setItems(prev => prev.map(i => i.id === id ? {...i, ...data} : i));
