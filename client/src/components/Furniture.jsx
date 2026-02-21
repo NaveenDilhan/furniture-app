@@ -15,10 +15,20 @@ export default function Furniture({
   // 2. Clone scene for multiple instances
   const clone = useMemo(() => scene.clone(), [scene]);
 
+    // 3. Tag all meshes in this furniture with the furniture ID for raycasting
+  // Using useMemo on clone to tag immediately when clone is created
+  useMemo(() => {
+    clone.userData.furnitureId = id;
+    clone.userData.furnitureType = type;
+    clone.traverse((child) => {
+      child.userData.furnitureId = id;
+      child.userData.furnitureType = type;
+    });
+  }, [clone, id, type]);
+
   const isEditable = isSelected && mode !== 'Tour';
 
   // --- BOUNDARY LIMITS ---
-  // We calculate the safe area (Room Size / 2) minus a small buffer (0.5) so it doesn't clip INTO the wall
   const widthLimit = (roomConfig?.width || 15) / 2 - 0.5;
   const depthLimit = (roomConfig?.depth || 15) / 2 - 0.5;
 
@@ -28,21 +38,14 @@ export default function Furniture({
         <TransformControls
           object={meshRef}
           mode="translate"
-          // 1. Hide the Vertical (Y) Arrow
           showY={false} 
           
           onMouseDown={() => setIsDragging && setIsDragging(true)}
           
-          // 2. REAL-TIME PHYSICS FIX
           onObjectChange={() => {
              if (meshRef.current) {
                 const pos = meshRef.current.position;
-
-                // A. Lock to Floor (Never fly)
                 pos.y = 0; 
-
-                // B. Clamp to Walls (Never go through)
-                // If position > Limit, force it to Limit.
                 pos.x = THREE.MathUtils.clamp(pos.x, -widthLimit, widthLimit);
                 pos.z = THREE.MathUtils.clamp(pos.z, -depthLimit, depthLimit);
              }
