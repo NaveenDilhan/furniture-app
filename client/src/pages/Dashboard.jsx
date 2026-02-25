@@ -39,6 +39,10 @@ export default function Dashboard() {
 
   const [toast, setToast] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  
+  // New States for Loading Projects
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [savedDesigns, setSavedDesigns] = useState([]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -107,7 +111,9 @@ export default function Dashboard() {
       };
       setScreenshots(prev => [...prev, newScreenshot]);
       showToast('Screenshot saved to gallery!');
+      return dataUrl;
     }
+    return null;
   };
 
   const downloadScreenshot = (dataUrl, name) => {
@@ -135,18 +141,59 @@ export default function Dashboard() {
     } catch (err) { showToast('Save Failed'); }
   };
 
-  const loadDesigns = async () => {
+  // Fetch all designs and open the selection modal
+  const fetchDesigns = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/designs/${user._id}`);
       const data = await res.json();
       if (data.length > 0) {
-        const design = data[data.length - 1];
-        setItems(design.items);
-        if(design.roomConfig) setRoomConfig(design.roomConfig);
-        showToast(`Loaded: ${design.name}`);
-      } else showToast('No saved designs found.');
-    } catch (err) { showToast('Load Failed'); }
+        setSavedDesigns(data);
+        setShowLoadModal(true);
+      } else {
+        showToast('No saved designs found.');
+      }
+    } catch (err) { 
+      showToast('Failed to fetch designs'); 
+    }
   };
+
+  // Load a specific chosen design
+  const handleLoadDesign = (design) => {
+    setItems(design.items);
+    if(design.roomConfig) setRoomConfig(design.roomConfig);
+    showToast(`Loaded: ${design.name}`);
+    setShowLoadModal(false);
+  };
+
+  // --- Electron Native Menu Integration ---
+  useEffect(() => {
+    if (window.require) {
+      const { ipcRenderer } = window.require('electron');
+      
+      const handleMenuAction = (event, action) => {
+        switch (action) {
+          case 'view-3d': handleModeChange('3D'); break;
+          case 'view-2d': handleModeChange('2D'); break;
+          case 'view-tour': handleModeChange('Tour'); break;
+          case 'checkout': setShowCheckout(true); break;
+          case 'save-project': setShowSaveModal(true); break;
+          case 'load-project': fetchDesigns(); break; // Updated to call fetchDesigns
+          case 'take-screenshot': 
+            const dataUrl = takeScreenshot();
+            if (dataUrl) downloadScreenshot(dataUrl, 'design');
+            break;
+          default: break;
+        }
+      };
+
+      ipcRenderer.on('menu-action', handleMenuAction);
+
+      // Cleanup listener on unmount
+      return () => {
+        ipcRenderer.removeListener('menu-action', handleMenuAction);
+      };
+    }
+  }, [user, screenshots, mode]); 
 
   if (!user) return null;
 
@@ -172,10 +219,9 @@ export default function Dashboard() {
           roomConfig={roomConfig}
           setRoomConfig={setRoomConfig}
           saveDesign={() => setShowSaveModal(true)}
-          loadDesigns={loadDesigns}
+          loadDesigns={fetchDesigns} // Updated to call fetchDesigns
           downloadScreenshot={() => {
-            takeScreenshot();
-            const dataUrl = canvasRef.current?.takeScreenshot();
+            const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
           }}
           screenshots={screenshots}
@@ -190,21 +236,6 @@ export default function Dashboard() {
         <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={toggleBtnStyle}>
           {sidebarCollapsed ? '▶' : '◀'}
         </button>
-
-        {/* Floating Toolbar */}
-        <div style={{
-          position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)',
-          zIndex: 10, display: 'flex', gap: 10, background: 'rgba(30,30,30,0.85)',
-          padding: '8px 16px', borderRadius: 20, backdropFilter: 'blur(6px)', 
-          border: '1px solid #555', boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
-        }}>
-          <button className={`btn ${mode === '3D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('3D')}>📦 3D View</button>
-          <button className={`btn ${mode === '2D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('2D')}>📐 2D Blueprint</button>
-          <button className={`btn ${mode === 'Tour' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('Tour')}>🚶 Tour Mode</button>
-          <button className="btn" style={{ background: '#22c55e', color: 'white', fontWeight: 'bold' }} onClick={() => setShowCheckout(true)}>
-            🛒 Checkout
-          </button>
-        </div>
 
         <DesignCanvas
           ref={canvasRef}
@@ -235,6 +266,7 @@ export default function Dashboard() {
 
       {toast && <Toast message={toast} />}
       
+      {/* Save Project Modal */}
       <CustomModal 
         isOpen={showSaveModal}
         title="Save Project"
@@ -242,6 +274,50 @@ export default function Dashboard() {
         onClose={() => setShowSaveModal(false)}
         onSubmit={handleSaveSubmit}
       />
+
+      {/* Load Project Selection Modal */}
+      {showLoadModal && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Select Project to Load</h2>
+            
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '5px' }}>
+              {savedDesigns.slice().reverse().map(design => (
+                <div 
+                  key={design._id} 
+                  onClick={() => handleLoadDesign(design)}
+                  style={designCardStyle}
+                >
+                  {design.thumbnail ? (
+                    <img src={design.thumbnail} alt={design.name} style={thumbnailStyle} />
+                  ) : (
+                    <div style={{ ...thumbnailStyle, background: '#e0e0e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888' }}>
+                      No Img
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: '0 0 5px 0', fontSize: '1.1rem', color: '#222' }}>{design.name}</h3>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#666' }}>
+                      Items: {design.items?.length || 0}
+                    </p>
+                    {design.createdAt && (
+                      <p style={{ margin: '4px 0 0 0', fontSize: '0.75rem', color: '#999' }}>
+                        {new Date(design.createdAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowLoadModal(false)} style={cancelBtnStyle}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CheckoutModal 
         isOpen={showCheckout}
@@ -252,6 +328,8 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// --- Styles ---
 
 const toggleBtnStyle = {
   position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
@@ -271,4 +349,33 @@ const overlayStyle = {
 
 const btnBlue = {
   padding: '12px 32px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
+};
+
+// Modal Styles
+const modalOverlayStyle = {
+  position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+  background: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', 
+  alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)'
+};
+
+const modalContentStyle = {
+  background: 'white', padding: '24px', borderRadius: '12px', 
+  width: '500px', maxWidth: '90%', fontFamily: 'sans-serif',
+  boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+};
+
+const designCardStyle = {
+  display: 'flex', alignItems: 'center', gap: '15px', padding: '12px', 
+  border: '1px solid #e5e7eb', borderRadius: '8px', cursor: 'pointer',
+  transition: 'background 0.2s, borderColor 0.2s', background: '#f9fafb'
+};
+
+const thumbnailStyle = {
+  width: '100px', height: '70px', objectFit: 'cover', borderRadius: '6px',
+  boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+};
+
+const cancelBtnStyle = {
+  padding: '8px 16px', background: '#e5e7eb', color: '#374151', 
+  border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
 };

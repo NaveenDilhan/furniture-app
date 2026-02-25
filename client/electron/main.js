@@ -1,5 +1,5 @@
 // electron/main.js
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import path from 'path';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -18,13 +18,73 @@ const createWindow = () => {
     },
   });
 
+  // --- Define the Application Menu ---
+  const menuTemplate = [
+    {
+      label: 'File',
+      submenu: [
+        { 
+          label: 'Save Project', 
+          accelerator: 'CmdOrCtrl+S',
+          click: () => mainWindow.webContents.send('menu-action', 'save-project') 
+        },
+        { 
+          label: 'Load Project', 
+          accelerator: 'CmdOrCtrl+O',
+          click: () => mainWindow.webContents.send('menu-action', 'load-project') 
+        },
+        { type: 'separator' },
+        { 
+          label: 'Take Screenshot', 
+          accelerator: 'CmdOrCtrl+P',
+          click: () => mainWindow.webContents.send('menu-action', 'take-screenshot') 
+        },
+        { type: 'separator' },
+        { label: 'Exit', role: 'quit' }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { 
+          label: '3D View', 
+          accelerator: 'CmdOrCtrl+1',
+          click: () => mainWindow.webContents.send('menu-action', 'view-3d') 
+        },
+        { 
+          label: '2D Blueprint', 
+          accelerator: 'CmdOrCtrl+2',
+          click: () => mainWindow.webContents.send('menu-action', 'view-2d') 
+        },
+        { 
+          label: 'Tour Mode', 
+          accelerator: 'CmdOrCtrl+3',
+          click: () => mainWindow.webContents.send('menu-action', 'view-tour') 
+        },
+        { type: 'separator' },
+        { role: 'reload' },
+        { role: 'toggleDevTools' }
+      ]
+    },
+    {
+      label: 'Shop',
+      submenu: [
+        { 
+          label: 'Checkout', 
+          accelerator: 'CmdOrCtrl+Enter',
+          click: () => mainWindow.webContents.send('menu-action', 'checkout') 
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+
   // Load the React app
   // In development, we load the Vite local server
   // In production, we would load the built index.html file
   mainWindow.loadURL('http://localhost:5173');
-
-  // Open the DevTools (optional - remove this line for final submission)
-  // mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished

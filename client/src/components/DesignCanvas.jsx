@@ -146,7 +146,8 @@ const DesignCanvas = forwardRef(({
       ref={canvasRef}
       shadows="soft"
       dpr={dpr}
-      camera={{ position: [10, 10, 10], fov: 50 }}
+      // UPDATE: Bound FOV to the roomConfig state
+      camera={{ position: [10, 10, 10], fov: roomConfig.cameraFov || 50 }}
       gl={{ 
         preserveDrawingBuffer: true,
         antialias: true,
@@ -177,7 +178,10 @@ const DesignCanvas = forwardRef(({
         <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20]} />
       </directionalLight>
 
-      {!is2D && <SoftShadows size={10} samples={12} focus={0.5} />}
+      {/* UPDATE: Conditional Soft Shadows based on toggle */}
+      {!is2D && roomConfig.shadowsEnabled !== false && (
+        <SoftShadows size={10} samples={12} focus={0.5} />
+      )}
 
       <Environment 
         files={config.file} 
@@ -198,8 +202,8 @@ const DesignCanvas = forwardRef(({
           floorColor={roomConfig.floorColor} 
         />
         
-        {/* --- BLUEPRINT GRID (Visible ONLY in 2D) --- */}
-        {is2D && (
+        {/* UPDATE: Conditional Blueprint Grid based on toggle */}
+        {is2D && roomConfig.showGrid !== false && (
            <Grid 
              args={[100, 100]} 
              sectionSize={2} 
