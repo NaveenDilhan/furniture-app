@@ -177,7 +177,7 @@ export default function Dashboard() {
           case 'view-tour': handleModeChange('Tour'); break;
           case 'checkout': setShowCheckout(true); break;
           case 'save-project': setShowSaveModal(true); break;
-          case 'load-project': fetchDesigns(); break; // Updated to call fetchDesigns
+          case 'load-project': fetchDesigns(); break; 
           case 'take-screenshot': 
             const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
@@ -219,7 +219,7 @@ export default function Dashboard() {
           roomConfig={roomConfig}
           setRoomConfig={setRoomConfig}
           saveDesign={() => setShowSaveModal(true)}
-          loadDesigns={fetchDesigns} // Updated to call fetchDesigns
+          loadDesigns={fetchDesigns} 
           downloadScreenshot={() => {
             const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
@@ -230,7 +230,8 @@ export default function Dashboard() {
         />
       </div>
 
-      <div style={{ flex: 1, position: 'relative', background: '#000' }}>
+      {/* FIXED: Added minWidth: 0 and overflow: hidden to force the canvas wrapper to shrink below the 100vw width when the sidebar reopens */}
+      <div style={{ flex: 1, position: 'relative', background: '#000', minWidth: 0, overflow: 'hidden' }}>
         
         {/* Toggle Sidebar */}
         <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={toggleBtnStyle}>
