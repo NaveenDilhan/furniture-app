@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/sidebar/Sidebar';
 import DesignCanvas from '../components/DesignCanvas';
 import CustomModal from '../components/CustomModal';
+import CheckoutModal from '../components/CheckoutModal'; 
 
 // Toast Notification Component
 const Toast = ({ message }) => (
@@ -23,10 +24,14 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
+  
+  // Modes: '3D', '2D', 'Tour'
   const [mode, setMode] = useState('3D');
   const [showTourOverlay, setShowTourOverlay] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [screenshots, setScreenshots] = useState([]);
+  
+  const [showCheckout, setShowCheckout] = useState(false);
 
   const [roomConfig, setRoomConfig] = useState({
     width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
@@ -51,6 +56,10 @@ export default function Dashboard() {
     }
   };
 
+  const handleTourUnlock = () => {
+    setShowTourOverlay(true);
+  };
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -58,23 +67,20 @@ export default function Dashboard() {
 
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
-  // --- FIXED ADD ITEM FUNCTION ---
   const addItem = (itemData) => {
     const newItem = { 
-      id: Date.now(), // Generate unique ID for the scene
+      id: Date.now(), 
       position: [0, 0, 0], 
       rotation: [0, 0, 0], 
       scale: [1, 1, 1],
     };
 
     if (typeof itemData === 'object') {
-      // It's a full item from the Database/Library
-      // We spread itemData to get properties like modelUrl, name, type
       Object.assign(newItem, itemData, { id: Date.now() }); 
     } else {
-      // Fallback for string inputs (legacy support)
       newItem.type = itemData;
       newItem.name = itemData;
+      newItem.price = 0; 
     }
 
     setItems([...items, newItem]);
@@ -181,18 +187,7 @@ export default function Dashboard() {
       <div style={{ flex: 1, position: 'relative', background: '#000' }}>
         
         {/* Toggle Sidebar */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          style={{
-            position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
-            zIndex: 15, background: 'rgba(30, 30, 30, 0.85)', color: '#fff',
-            border: '1px solid #555', borderLeft: 'none', borderRadius: '0 8px 8px 0',
-            width: '24px', height: '60px', fontSize: '14px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(6px)', boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
-            transition: 'background 0.2s'
-          }}
-        >
+        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} style={toggleBtnStyle}>
           {sidebarCollapsed ? '▶' : '◀'}
         </button>
 
@@ -204,8 +199,11 @@ export default function Dashboard() {
           border: '1px solid #555', boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
         }}>
           <button className={`btn ${mode === '3D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('3D')}>📦 3D View</button>
-          <button className={`btn ${mode === '2D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('2D')}>📐 Blueprint</button>
+          <button className={`btn ${mode === '2D' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('2D')}>📐 2D Blueprint</button>
           <button className={`btn ${mode === 'Tour' ? 'btn-primary' : ''}`} onClick={() => handleModeChange('Tour')}>🚶 Tour Mode</button>
+          <button className="btn" style={{ background: '#22c55e', color: 'white', fontWeight: 'bold' }} onClick={() => setShowCheckout(true)}>
+            🛒 Checkout
+          </button>
         </div>
 
         <DesignCanvas
@@ -214,30 +212,23 @@ export default function Dashboard() {
           selectedId={selectedId}
           setSelectedId={setSelectedId}
           updateItem={updateItem}
+          deleteItem={deleteItem}
           mode={mode}
           roomConfig={roomConfig}
-          onScreenshot={takeScreenshot}
+          onTourUnlock={handleTourUnlock}
         />
 
-        {/* Tour Overlay Logic */}
         {mode === 'Tour' && showTourOverlay && (
-          <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(0,0,0,0.7)', cursor: 'pointer', zIndex: 2
-          }}>
+          <div id="tour-overlay" onClick={() => setShowTourOverlay(false)} style={overlayStyle}>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>🚶</div>
             <h2 style={{ color: 'white', margin: '0 0 10px' }}>Virtual Tour Mode</h2>
             <p style={{ color: '#aaa', margin: '0 0 20px', textAlign: 'center' }}>
               Click anywhere to start walking<br/>
               Use <b>W A S D</b> to move around<br/>
               Move your <b>mouse</b> to look around<br/>
-              Use <b>scroll wheel</b> to zoom in/out<br/>
               Press <b>ESC</b> to release cursor
             </p>
-            <div style={{ padding: '12px 32px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600 }}>
-              Click to Enter Tour
-            </div>
+            <div style={btnBlue}>Click to Enter Tour</div>
           </div>
         )}
       </div>
@@ -251,6 +242,33 @@ export default function Dashboard() {
         onClose={() => setShowSaveModal(false)}
         onSubmit={handleSaveSubmit}
       />
+
+      <CheckoutModal 
+        isOpen={showCheckout}
+        onClose={() => setShowCheckout(false)}
+        items={items}
+        onOrderSuccess={() => showToast("Order Placed Successfully!")}
+      />
     </div>
   );
 }
+
+const toggleBtnStyle = {
+  position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
+  zIndex: 15, background: 'rgba(30, 30, 30, 0.85)', color: '#fff',
+  border: '1px solid #555', borderLeft: 'none', borderRadius: '0 8px 8px 0',
+  width: '24px', height: '60px', fontSize: '14px', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  backdropFilter: 'blur(6px)', boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
+  transition: 'background 0.2s'
+};
+
+const overlayStyle = {
+  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+  background: 'rgba(0,0,0,0.7)', cursor: 'pointer', zIndex: 2
+};
+
+const btnBlue = {
+  padding: '12px 32px', background: '#3b82f6', color: 'white', borderRadius: '8px', fontSize: '1.1rem', fontWeight: 600
+};

@@ -6,7 +6,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/authRoutes');
 const designRoutes = require('./routes/designRoutes');
 const assetRoutes = require('./routes/assetRoutes');
-const furnitureRoutes = require('./routes/furnitureRoutes'); 
+const furnitureRoutes = require('./routes/furnitureRoutes');
+const orderRoutes = require('./routes/orderRoutes'); 
 
 const app = express();
 
@@ -18,7 +19,8 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/designs', designRoutes);
 app.use('/api/assets', assetRoutes);
-app.use('/api/furniture', furnitureRoutes); 
+app.use('/api/furniture', furnitureRoutes);
+app.use('/api/orders', orderRoutes); 
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
