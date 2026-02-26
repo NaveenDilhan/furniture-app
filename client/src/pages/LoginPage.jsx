@@ -1,15 +1,14 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoginBox from '../components/LoginBox';
+import logoImage from '../assets/logo.png'; 
+import woodBg from '../assets/wood-bg.jpg'; 
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Capture role from IntroPage state (defaults to 'User' if accessed directly)
   const selectedRole = location.state?.role || 'User';
 
-  // --- LOGIN LOGIC ---
   const handleLogin = async (username, password) => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
@@ -21,7 +20,7 @@ export default function LoginPage() {
       
       if (data.success) {
         localStorage.setItem('user', JSON.stringify(data));
-        navigate('/dashboard'); // Navigate to dashboard on success
+        navigate('/dashboard'); 
       } else {
         alert("Login Failed: " + data.message);
       }
@@ -31,7 +30,6 @@ export default function LoginPage() {
     }
   };
 
-  // --- REGISTRATION LOGIC ---
   const handleRegister = async (username, email, password) => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/register', {
@@ -55,20 +53,24 @@ export default function LoginPage() {
 
   return (
     <div style={pageStyles.wrapper}>
-      {/* Square Back Button */}
       <button 
         onClick={() => navigate('/')} 
-        style={pageStyles.squareBtn}
+        style={pageStyles.backBtn}
         title="Back to Role Selection"
       >
-        ←
+        <span style={{ transform: 'translateX(-2px)' }}>←</span>
       </button>
 
-      <LoginBox 
-        onLogin={handleLogin} 
-        onRegister={handleRegister} 
-        role={selectedRole} // Pass the role to the box
-      />
+      <div style={pageStyles.contentContainer}>
+        {/* Brand Logo with a subtle glow so it stands out against dark wood */}
+        <img src={logoImage} alt="Woodland Furnitures" style={pageStyles.logoImage} />
+        
+        <LoginBox 
+          onLogin={handleLogin} 
+          onRegister={handleRegister} 
+          role={selectedRole} 
+        />
+      </div>
     </div>
   );
 }
@@ -80,30 +82,48 @@ const pageStyles = {
     alignItems: 'center',
     minHeight: '100vh',
     width: '100vw',
-    backgroundColor: '#0f172a',
-    backgroundImage: 'radial-gradient(circle at center, #1e293b 0%, #0f172a 100%)',
+    padding: '60px 20px', 
+    boxSizing: 'border-box',
+    // Pure wood background
+    backgroundImage: `url(${woodBg})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
     position: 'relative',
-    margin: 0,
-    padding: 0,
-    overflow: 'hidden'
+    margin: 0
   },
-  squareBtn: {
+  contentContainer: {
+    zIndex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    width: '100%'
+  },
+  logoImage: { 
+    width: '240px',
+    marginBottom: '25px',
+    objectFit: 'contain',
+    // Added a subtle white glow/shadow just in case the wood is too dark for the logo
+    filter: 'drop-shadow(0px 4px 15px rgba(255, 255, 255, 0.6))'
+  },
+  backBtn: {
     position: 'absolute',
-    top: '20px',
-    left: '20px',
+    top: '30px',
+    left: '30px',
     width: '45px',
     height: '45px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    background: '#1e293b',
-    border: '1px solid #334155',
-    borderRadius: '10px',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: '50%',
+    color: '#2A4E3B',
+    fontSize: '22px',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     outline: 'none',
-    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+    zIndex: 2
   }
 };
