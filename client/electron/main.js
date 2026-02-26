@@ -40,6 +40,10 @@ const createWindow = () => {
           click: () => mainWindow.webContents.send('menu-action', 'take-screenshot') 
         },
         { type: 'separator' },
+        { 
+          label: 'Sign Out', 
+          click: () => mainWindow.webContents.send('menu-action', 'sign-out') 
+        },
         { label: 'Exit', role: 'quit' }
       ]
     },

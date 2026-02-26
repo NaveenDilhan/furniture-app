@@ -176,10 +176,11 @@ export default function Dashboard() {
           case 'view-3d': handleModeChange('3D'); break;
           case 'view-2d': handleModeChange('2D'); break;
           case 'view-tour': handleModeChange('Tour'); break;
-          case 'view-screenshots': setShowScreenshotsModal(true); break; // Trigger Screenshots Modal
+          case 'view-screenshots': setShowScreenshotsModal(true); break;
           case 'checkout': setShowCheckout(true); break;
           case 'save-project': setShowSaveModal(true); break;
           case 'load-project': fetchDesigns(); break; 
+          case 'sign-out': handleLogout(); break; // Handled Sign Out from app bar
           case 'take-screenshot': 
             const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
@@ -212,7 +213,6 @@ export default function Dashboard() {
       }}>
         <Sidebar
           user={user}
-          onLogout={handleLogout}
           addItem={addItem}
           selectedId={selectedId}
           items={items}
