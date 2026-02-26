@@ -62,6 +62,12 @@ const createWindow = () => {
           click: () => mainWindow.webContents.send('menu-action', 'view-tour') 
         },
         { type: 'separator' },
+        { 
+          label: 'Screenshots', 
+          accelerator: 'CmdOrCtrl+4',
+          click: () => mainWindow.webContents.send('menu-action', 'view-screenshots') 
+        },
+        { type: 'separator' },
         { role: 'reload' },
         { role: 'toggleDevTools' }
       ]
