@@ -23,7 +23,6 @@ export default function SidebarTabs({ activeTab, setActiveTab }) {
       <TabButton label="Tools" icon="🛠️" active={activeTab === TABS.PROPERTIES} onClick={() => setActiveTab(TABS.PROPERTIES)} />
       <TabButton label="Room" icon="🏠" active={activeTab === TABS.ROOM} onClick={() => setActiveTab(TABS.ROOM)} />
       <TabButton label="Global" icon="🌍" active={activeTab === TABS.GLOBAL} onClick={() => setActiveTab(TABS.GLOBAL)} />
-      <TabButton label="Shots" icon="📸" active={activeTab === TABS.SCREENSHOTS} onClick={() => setActiveTab(TABS.SCREENSHOTS)} />
     </div>
   );
 }

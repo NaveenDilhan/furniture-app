@@ -32,6 +32,7 @@ export default function Dashboard() {
   const [screenshots, setScreenshots] = useState([]);
   
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showScreenshotsModal, setShowScreenshotsModal] = useState(false); // New State for Screenshots Gallery
 
   const [roomConfig, setRoomConfig] = useState({
     width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
@@ -175,6 +176,7 @@ export default function Dashboard() {
           case 'view-3d': handleModeChange('3D'); break;
           case 'view-2d': handleModeChange('2D'); break;
           case 'view-tour': handleModeChange('Tour'); break;
+          case 'view-screenshots': setShowScreenshotsModal(true); break; // Trigger Screenshots Modal
           case 'checkout': setShowCheckout(true); break;
           case 'save-project': setShowSaveModal(true); break;
           case 'load-project': fetchDesigns(); break; 
@@ -224,13 +226,9 @@ export default function Dashboard() {
             const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
           }}
-          screenshots={screenshots}
-          onDownloadScreenshot={downloadScreenshot}
-          onDeleteScreenshot={deleteScreenshot}
         />
       </div>
 
-      {/* FIXED: Added minWidth: 0 and overflow: hidden to force the canvas wrapper to shrink below the 100vw width when the sidebar reopens */}
       <div style={{ flex: 1, position: 'relative', background: '#000', minWidth: 0, overflow: 'hidden' }}>
         
         {/* Toggle Sidebar */}
@@ -320,6 +318,48 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Screenshots Gallery Modal */}
+      {showScreenshotsModal && (
+        <div style={modalOverlayStyle}>
+          <div style={{ ...modalContentStyle, width: '600px', maxWidth: '95%' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '20px', color: '#333' }}>Screenshot Gallery</h2>
+            
+            <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '5px' }}>
+              {screenshots.length === 0 ? (
+                <p style={{ color: '#888', textAlign: 'center', marginTop: '40px', marginBottom: '40px' }}>
+                  No screenshots yet. Use "File - Take Screenshot" or Ctrl+P.
+                </p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '15px' }}>
+                  {screenshots.map((shot) => (
+                    <div key={shot.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', overflow: 'hidden', background: '#f9fafb' }}>
+                      <img src={shot.dataUrl} alt={shot.name} style={{ width: '100%', height: '150px', objectFit: 'cover', display: 'block' }} />
+                      <div style={{ padding: '12px' }}>
+                        <p style={{ color: '#222', fontSize: '0.95rem', margin: '0 0 10px', fontWeight: 600 }}>{shot.name}</p>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button style={{ ...actionBtnStyle, flex: 1, background: '#3b82f6', color: 'white' }} onClick={() => downloadScreenshot(shot.dataUrl, shot.name)}>
+                            ⬇️ Download
+                          </button>
+                          <button style={{ ...actionBtnStyle, background: '#ef4444', color: 'white' }} onClick={() => deleteScreenshot(shot.id)}>
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setShowScreenshotsModal(false)} style={cancelBtnStyle}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <CheckoutModal 
         isOpen={showCheckout}
         onClose={() => setShowCheckout(false)}
@@ -374,6 +414,10 @@ const designCardStyle = {
 const thumbnailStyle = {
   width: '100px', height: '70px', objectFit: 'cover', borderRadius: '6px',
   boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+};
+
+const actionBtnStyle = {
+  padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.85rem'
 };
 
 const cancelBtnStyle = {
