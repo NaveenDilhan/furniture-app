@@ -13,7 +13,7 @@ export const TABS = {
 };
 
 export default function Sidebar({ 
-  user, onLogout, addItem, selectedId, items, updateItem, deleteItem,
+  user, addItem, selectedId, items, updateItem, deleteItem,
   roomConfig, setRoomConfig, saveDesign, loadDesigns, downloadScreenshot
 }) {
   const [activeTab, setActiveTab] = useState(TABS.LIBRARY);
@@ -62,11 +62,7 @@ export default function Sidebar({
           />
         )}
       </div>
-
-      {/* Footer */}
-      <div style={{ padding: '20px', borderTop: '1px solid var(--border)' }}>
-        <button className="btn btn-danger" style={{ width: '100%' }} onClick={onLogout}>Sign Out</button>
-      </div>
+     
     </div>
   );
 }
