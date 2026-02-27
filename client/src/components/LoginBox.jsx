@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function LoginBox({ onLogin, onRegister }) {
+export default function LoginBox({ onLogin, onRegister, role }) {
   const [view, setView] = useState('login'); // 'login', 'register', or 'forgot'
   const [formData, setFormData] = useState({ 
     username: '', 
@@ -28,7 +28,6 @@ export default function LoginBox({ onLogin, onRegister }) {
     } else if (view === 'login') {
       onLogin(formData.username, formData.password);
     } else if (view === 'forgot') {
-      // Mock logic for sending reset link
       alert(`Password reset link sent to: ${formData.email}`);
       setView('login');
     }
@@ -43,15 +42,18 @@ export default function LoginBox({ onLogin, onRegister }) {
   return (
     <div style={styles.card}>
       <div style={styles.header}>
+        {/* Role Badge */}
+        <div style={styles.roleBadge}>{role} Portal</div>
+        
         <h2 style={styles.title}>
-          {view === 'login' && 'Welcome'}
+          {view === 'login' && 'Welcome Back'}
           {view === 'register' && 'Create Account'}
           {view === 'forgot' && 'Reset Password'}
         </h2>
         <p style={styles.subtitle}>
-          {view === 'login' && 'Login to manage your design portfolio'}
-          {view === 'register' && 'Join our furniture design community'}
-          {view === 'forgot' && 'Enter your email to receive a recovery link'}
+          {view === 'login' && 'Please enter your details to sign in.'}
+          {view === 'register' && 'Join our design community.'}
+          {view === 'forgot' && 'Enter your email for a recovery link.'}
         </p>
       </div>
       
@@ -123,7 +125,7 @@ export default function LoginBox({ onLogin, onRegister }) {
 
         {/* Forgot Password Link: Only on Login view */}
         {view === 'login' && (
-          <div style={{ textAlign: 'right', marginBottom: '15px' }}>
+          <div style={{ textAlign: 'right', marginBottom: '14px' }}>
             <button type="button" onClick={() => switchView('forgot')} style={styles.smallLink}>
               Forgot Password?
             </button>
@@ -138,7 +140,7 @@ export default function LoginBox({ onLogin, onRegister }) {
       </form>
 
       <div style={styles.footer}>
-        <span style={{ color: '#94a3b8' }}>
+        <span style={{ color: '#64748b' }}>
           {view === 'login' ? "Don't have an account?" : "Back to"}
         </span>
         <button 
@@ -154,53 +156,101 @@ export default function LoginBox({ onLogin, onRegister }) {
 
 const styles = {
   card: { 
-    width: '400px', 
-    padding: '40px', 
-    background: '#1e293b', 
+    width: '380px', 
+    padding: '35px', // Reduced padding to fit smaller screens
+    backgroundColor: '#ffffff', 
     borderRadius: '16px', 
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', 
-    border: '1px solid #334155' 
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)', 
+    border: '1px solid #f1f5f9',
+    boxSizing: 'border-box'
   },
-  header: { marginBottom: '32px', textAlign: 'center' },
-  title: { color: '#f8fafc', fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0' },
-  subtitle: { color: '#94a3b8', fontSize: '14px', margin: 0 },
-  label: { display: 'block', color: '#cbd5e1', fontSize: '14px', marginBottom: '8px', fontWeight: '500' },
+  header: { marginBottom: '25px', textAlign: 'center' }, // Tighter spacing
+  roleBadge: { 
+    display: 'inline-block', 
+    padding: '6px 14px', 
+    backgroundColor: 'rgba(42, 78, 59, 0.1)', 
+    color: '#2A4E3B', 
+    borderRadius: '20px', 
+    fontSize: '11px', 
+    fontWeight: '700', 
+    textTransform: 'uppercase', 
+    marginBottom: '12px', 
+    letterSpacing: '1px' 
+  },
+  title: { 
+    color: '#1e293b', 
+    fontSize: '22px', 
+    fontWeight: '600', 
+    margin: '0 0 6px 0', 
+    letterSpacing: '-0.5px' 
+  },
+  subtitle: { color: '#64748b', fontSize: '13px', margin: 0 },
+  label: { 
+    display: 'block', 
+    color: '#475569', 
+    fontSize: '12px', 
+    marginBottom: '4px', // Tighter spacing
+    fontWeight: '500' 
+  },
   input: { 
     display: 'block', 
     width: '100%', 
-    padding: '12px 16px', 
-    marginBottom: '15px', 
+    padding: '10px 14px', // Thinner inputs
+    marginBottom: '14px', // Tighter spacing
     borderRadius: '8px', 
-    border: '1px solid #334155', 
-    background: '#0f172a', 
-    color: 'white', 
+    border: '1px solid #cbd5e1', 
+    backgroundColor: '#f8fafc', 
+    color: '#0f172a', 
     boxSizing: 'border-box', 
-    fontSize: '16px', 
-    outline: 'none' 
+    fontSize: '14px', 
+    outline: 'none', 
+    transition: 'border-color 0.2s' 
   },
   btn: { 
     width: '100%', 
-    padding: '14px', 
-    marginTop: '10px', 
+    padding: '12px', // Thinner button
+    marginTop: '6px', 
     cursor: 'pointer', 
-    background: '#10b981', // Professional Emerald Green
+    backgroundColor: '#2A4E3B', 
     color: 'white', 
     border: 'none', 
     borderRadius: '8px', 
     fontWeight: '600', 
-    fontSize: '16px' 
+    fontSize: '15px', 
+    transition: 'background-color 0.2s'
   },
-  linkBtn: { background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', fontWeight: '600', marginLeft: '8px' },
-  smallLink: { background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline' },
-  footer: { marginTop: '24px', textAlign: 'center', fontSize: '14px' },
-  errorAlert: { 
-    background: 'rgba(239, 68, 68, 0.2)', 
-    color: '#fca5a5', 
-    padding: '12px', 
-    borderRadius: '8px', 
-    marginBottom: '20px', 
+  linkBtn: { 
+    background: 'none', 
+    border: 'none', 
+    color: '#2A4E3B', 
+    cursor: 'pointer', 
+    fontWeight: '600', 
+    marginLeft: '6px' 
+  },
+  smallLink: { 
+    background: 'none', 
+    border: 'none', 
+    color: '#64748b', 
+    cursor: 'pointer', 
+    fontSize: '12px', 
+    textDecoration: 'none', 
+    fontWeight: '500' 
+  },
+  footer: { 
+    marginTop: '20px', 
     textAlign: 'center', 
-    fontSize: '14px', 
-    border: '1px solid rgba(239, 68, 68, 0.4)' 
+    fontSize: '13px', 
+    borderTop: '1px solid #f1f5f9', 
+    paddingTop: '16px' // Tighter spacing
+  },
+  errorAlert: { 
+    backgroundColor: '#fef2f2', 
+    color: '#b91c1c', 
+    padding: '10px', 
+    borderRadius: '8px', 
+    marginBottom: '16px', 
+    textAlign: 'center', 
+    fontSize: '13px', 
+    border: '1px solid #fecaca' 
   }
 };
