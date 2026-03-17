@@ -15,11 +15,8 @@ export default function Furniture({
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
 
-  // 1. Safe Model Loading: Use DB modelUrl, fallback to local path if missing
+  // 1. Safe Model Loading
   const modelPath = modelUrl || `/models/${type.toLowerCase()}.glb`;
-  
-  // useGLTF handles caching automatically. 
-  // NOTE: Ensure your <Canvas> is wrapped in a <Suspense> boundary.
   const { scene } = useGLTF(modelPath);
 
   // 2. Clone & Prepare Scene (Shadows & Materials)
@@ -27,13 +24,10 @@ export default function Furniture({
     if (!scene) return null;
     const clonedScene = scene.clone();
     
-    // Traverse the model to ensure all child meshes handle shadows
     clonedScene.traverse((node) => {
       if (node.isMesh) {
         node.castShadow = true;
         node.receiveShadow = true;
-        
-        // Clone materials to allow independent color changes per instance
         if (node.material) {
            node.material = node.material.clone(); 
         }
@@ -42,7 +36,6 @@ export default function Furniture({
     return clonedScene;
   }, [scene]);
 
-  // Cleanup cloned materials on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
       if (clone) {
@@ -55,24 +48,58 @@ export default function Furniture({
     };
   }, [clone]);
 
-  // 3. Boundary Calculations
-  // Ensure limits are positive numbers to prevent clamp errors
-  const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - 0.5); 
-  const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - 0.5);
-
-  // 4. Transform Logic
+  // 3. Transform & Proper Collision Logic
   const showTransform = isSelected && mode !== 'Tour';
 
   const handleTransformChange = () => {
     if (!meshRef.current) return;
-    const currentPos = meshRef.current.position;
+    const mesh = meshRef.current;
 
     // A. Floor Lock (Keep it strictly on the ground)
-    if (currentPos.y !== 0) currentPos.y = 0;
+    mesh.position.y = 0;
 
-    // B. Wall Clamp (Prevent dragging outside the room bounds)
-    currentPos.x = THREE.MathUtils.clamp(currentPos.x, -widthLimit, widthLimit);
-    currentPos.z = THREE.MathUtils.clamp(currentPos.z, -depthLimit, depthLimit);
+    // B. Real-time Bounding Box Collision
+    // Ensure the matrix is fully updated for this frame before calculating bounds
+    mesh.updateMatrixWorld();
+    
+    // Get the exact world-space bounding box of the model (accounts for rotation/scale)
+    const box = new THREE.Box3().setFromObject(mesh);
+    
+    const roomWidth = roomConfig?.width || 15;
+    const roomDepth = roomConfig?.depth || 15;
+
+    // Room inner boundaries
+    const roomMinX = -roomWidth / 2;
+    const roomMaxX = roomWidth / 2;
+    const roomMinZ = -roomDepth / 2;
+    const roomMaxZ = roomDepth / 2;
+
+    let newX = mesh.position.x;
+    let newZ = mesh.position.z;
+
+    // Calculate dimensions of the bounding box itself
+    const boxWidth = box.max.x - box.min.x;
+    const boxDepth = box.max.z - box.min.z;
+
+    // Prevent clipping on the X Axis
+    if (boxWidth > roomWidth) {
+      newX = 0; // Fallback if object is larger than the room itself
+    } else {
+      if (box.min.x < roomMinX) newX += (roomMinX - box.min.x);
+      if (box.max.x > roomMaxX) newX -= (box.max.x - roomMaxX);
+    }
+
+    // Prevent clipping on the Z Axis
+    if (boxDepth > roomDepth) {
+      newZ = 0; // Fallback if object is larger than the room itself
+    } else {
+      if (box.min.z < roomMinZ) newZ += (roomMinZ - box.min.z);
+      if (box.max.z > roomMaxZ) newZ -= (box.max.z - roomMaxZ);
+    }
+
+    // Apply the corrected, collision-safe positions
+    mesh.position.x = newX;
+    mesh.position.z = newZ;
   };
 
   const handleTransformEnd = () => {
@@ -82,7 +109,6 @@ export default function Furniture({
       onChange(id, {
         position: meshRef.current.position.toArray(),
         rotation: meshRef.current.rotation.toArray(),
-        // Check if scale is an array or a single number before saving
         scale: typeof meshRef.current.scale.toArray === 'function' 
           ? meshRef.current.scale.toArray() 
           : [meshRef.current.scale.x, meshRef.current.scale.y, meshRef.current.scale.z],
@@ -90,18 +116,16 @@ export default function Furniture({
     }
   };
 
-  // 5. Cursor Logic
+  // 4. Cursor Logic
   useEffect(() => {
     if (hovered && mode !== 'Tour') {
       document.body.style.cursor = 'grab';
     } else {
       document.body.style.cursor = 'auto';
     }
-    // Cleanup cursor on unmount
     return () => { document.body.style.cursor = 'auto'; };
   }, [hovered, mode]);
 
-  // Ensure scale is formatted correctly for R3F (Array or Vector3)
   const formattedScale = Array.isArray(scale) ? scale : [scale, scale, scale];
 
   return (
@@ -111,8 +135,8 @@ export default function Furniture({
           object={meshRef}
           mode="translate"
           showY={false}
-          translationSnap={0.1}
-          rotationSnap={Math.PI / 12} // 15 degrees
+          translationSnap={0.05}
+          rotationSnap={Math.PI / 12}
           onMouseDown={() => setIsDragging && setIsDragging(true)}
           onObjectChange={handleTransformChange}
           onMouseUp={handleTransformEnd}
@@ -129,18 +153,17 @@ export default function Furniture({
           onSelect(id);
         }}
         onPointerOver={(e) => {
-          e.stopPropagation(); // Prevent hover events firing on items behind this one
+          e.stopPropagation();
           setHovered(true);
         }}
         onPointerOut={() => setHovered(false)}
-        dispose={null} // Let React manage disposal
+        dispose={null}
       >
         {clone && <primitive object={clone} />}
 
-        {/* Visual Feedback: Selection Outline */}
         {(isSelected || hovered) && (
           <Edges 
-            scale={1.02} // Slightly tighter outline
+            scale={1.02} 
             threshold={15}
             color={isSelected ? "#4facfe" : "#a1a1aa"} 
             opacity={isSelected ? 1 : 0.6}
@@ -148,17 +171,9 @@ export default function Furniture({
           />
         )}
 
-        {/* Dynamic Light for Lamps */}
         {type === 'Lamp' && (
           <group position={[0, 1.5, 0]}>
-            <pointLight 
-              intensity={2} 
-              distance={6} 
-              color="#ffeebb" 
-              castShadow 
-              shadow-bias={-0.001} 
-            />
-            {/* Small visible bulb helper */}
+            <pointLight intensity={2} distance={6} color="#ffeebb" castShadow shadow-bias={-0.001} />
             <mesh>
               <sphereGeometry args={[0.05, 16, 16]} />
               <meshBasicMaterial color="#ffffff" />
@@ -166,7 +181,6 @@ export default function Furniture({
           </group>
         )}
 
-        {/* UI Label (Only visible when selected) */}
         {isSelected && (
           <Html position={[0, 2.2, 0]} center zIndexRange={[100, 0]}>
             <div style={{

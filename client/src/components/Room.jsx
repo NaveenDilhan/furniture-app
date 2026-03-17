@@ -12,6 +12,9 @@ export default function Room({ width, depth, wallColor }) {
   texture.anisotropy = 16;
   texture.colorSpace = THREE.SRGBColorSpace;
 
+  const wallThickness = 0.2;
+  const wallHeight = 5;
+
   return (
     <group>
       {/* Floor */}
@@ -20,23 +23,21 @@ export default function Room({ width, depth, wallColor }) {
         <meshStandardMaterial map={texture} />
       </mesh>
       
-      {/* GRID REMOVED HERE: The floor will now be clean wood! */}
-
-      {/* Back Wall */}
-      <mesh position={[0, 2.5, -depth / 2]} receiveShadow>
-        <boxGeometry args={[width, 5, 0.2]} />
+      {/* Back Wall - Moved outward so the inner face is perfectly at -depth/2 */}
+      <mesh position={[0, wallHeight / 2, -depth / 2 - wallThickness / 2]} receiveShadow castShadow>
+        <boxGeometry args={[width + wallThickness * 2, wallHeight, wallThickness]} />
         <meshStandardMaterial color={wallColor} />
       </mesh>
 
-      {/* Left Wall */}
-      <mesh position={[-width / 2, 2.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[depth, 5, 0.2]} />
+      {/* Left Wall - Moved outward so the inner face is perfectly at -width/2 */}
+      <mesh position={[-width / 2 - wallThickness / 2, wallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
+        <boxGeometry args={[depth, wallHeight, wallThickness]} />
         <meshStandardMaterial color={wallColor} />
       </mesh>
 
-      {/* Right Wall */}
-      <mesh position={[width / 2, 2.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-        <boxGeometry args={[depth, 5, 0.2]} />
+      {/* Right Wall - Moved outward so the inner face is perfectly at width/2 */}
+      <mesh position={[width / 2 + wallThickness / 2, wallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
+        <boxGeometry args={[depth, wallHeight, wallThickness]} />
         <meshStandardMaterial color={wallColor} />
       </mesh>
     </group>
