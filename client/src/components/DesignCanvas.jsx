@@ -195,12 +195,13 @@ const DesignCanvas = forwardRef(({
 
       {/* --- SCENE CONTENT --- */}
       <group position={[0, -0.01, 0]}>
-        <Room 
-          width={roomConfig.width} 
-          depth={roomConfig.depth} 
-          wallColor={roomConfig.wallColor} 
-          floorColor={roomConfig.floorColor} 
-        />
+        <Room
+  width={roomConfig.width}
+  depth={roomConfig.depth}
+  wallColor={roomConfig.wallColor}
+  wallTexture={roomConfig.wallTexture}
+  floorTexture={roomConfig.floorTexture}
+/>
         
         {/* UPDATE: Conditional Blueprint Grid based on toggle */}
         {is2D && roomConfig.showGrid !== false && (

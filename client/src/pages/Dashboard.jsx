@@ -16,7 +16,40 @@ const Toast = ({ message }) => (
     {message}
   </div>
 );
+const getBaseFurnitureScale = (type = '') => {
+  const t = type.toLowerCase();
 
+  if (t.includes('bed')) return 1.8;
+  if (t.includes('sofa') || t.includes('couch')) return 1.6;
+  if (t.includes('dining table')) return 1.4;
+  if (t.includes('table') || t.includes('desk')) return 1.2;
+  if (t.includes('chair') || t.includes('stool')) return 0.9;
+  if (t.includes('lamp')) return 0.8;
+  if (t.includes('wardrobe') || t.includes('cabinet') || t.includes('closet')) return 1.5;
+  if (t.includes('shelf') || t.includes('bookshelf')) return 1.3;
+  if (t.includes('tv stand')) return 1.2;
+
+  return 1.1;
+};
+
+const getRoomFitMultiplier = (roomWidth, roomDepth) => {
+  const avgRoomSize = (roomWidth + roomDepth) / 2;
+
+  if (avgRoomSize <= 8) return 0.75;
+  if (avgRoomSize <= 12) return 0.9;
+  if (avgRoomSize <= 18) return 1;
+  if (avgRoomSize <= 25) return 1.15;
+
+  return 1.25;
+};
+
+const getDefaultFurnitureScale = (type, roomConfig) => {
+  const base = getBaseFurnitureScale(type);
+  const roomFactor = getRoomFitMultiplier(roomConfig.width, roomConfig.depth);
+  const finalScale = base * roomFactor;
+
+  return [finalScale, finalScale, finalScale];
+};
 export default function Dashboard() {
   const navigate = useNavigate();
   const canvasRef = useRef();
@@ -35,8 +68,13 @@ export default function Dashboard() {
   const [showScreenshotsModal, setShowScreenshotsModal] = useState(false); // New State for Screenshots Gallery
 
   const [roomConfig, setRoomConfig] = useState({
-    width: 15, depth: 15, wallColor: '#e0e0e0', floorColor: '#5c3a21', lightingMode: 'Day'
-  });
+  width: 15,
+  depth: 15,
+  wallColor: '#e0e0e0',
+  wallTexture: '/textures/wall_paint.jpg',
+  floorTexture: '/textures/wood_floor.jpg',
+  lightingMode: 'Day'
+});
 
   const [toast, setToast] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -73,25 +111,28 @@ export default function Dashboard() {
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
   const addItem = (itemData) => {
-    const newItem = { 
-      id: Date.now(), 
-      position: [0, 0, 0], 
-      rotation: [0, 0, 0], 
-      scale: [1, 1, 1],
-    };
-
-    if (typeof itemData === 'object') {
-      Object.assign(newItem, itemData, { id: Date.now() }); 
-    } else {
-      newItem.type = itemData;
-      newItem.name = itemData;
-      newItem.price = 0; 
-    }
-
-    setItems([...items, newItem]);
-    setSelectedId(newItem.id);
-    showToast(`Added ${newItem.name || newItem.type}`);
+  const newItem = {
+    id: Date.now(),
+    position: [0, 0, 0],
+    rotation: [0, 0, 0],
+    scale: [1, 1, 1],
   };
+
+  if (typeof itemData === 'object') {
+    Object.assign(newItem, itemData, {
+      id: Date.now(),
+      scale: itemData.scale || [1, 1, 1],
+    });
+  } else {
+    newItem.type = itemData;
+    newItem.name = itemData;
+    newItem.price = 0;
+  }
+
+  setItems([...items, newItem]);
+  setSelectedId(newItem.id);
+  showToast(`Added ${newItem.name || newItem.type}`);
+};
 
   const updateItem = (id, data) => setItems(prev => prev.map(i => i.id === id ? {...i, ...data} : i));
   
