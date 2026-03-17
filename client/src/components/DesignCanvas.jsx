@@ -37,8 +37,6 @@ const LIGHT_CONFIG = {
   },
 };
 
-// --- Helper Components ---
-
 const LoadingScreen = () => (
   <Html center>
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
@@ -52,10 +50,6 @@ const LoadingScreen = () => (
   </Html>
 );
 
-/**
- * CameraController
- * Enforces strict camera behavior per mode.
- */
 const CameraController = ({ mode }) => {
   const { camera, controls } = useThree();
 
@@ -63,63 +57,36 @@ const CameraController = ({ mode }) => {
     if (!controls?.current) return;
     const ctrl = controls.current;
 
-    // Reset internal state to avoid drifting from previous modes
     ctrl.reset();
 
     if (mode === '2D') {
-      // --- BLUEPRINT MODE (Strict Top-Down) ---
-      
-      // 1. Move camera high up, looking straight down
       camera.position.set(0, 50, 0); 
       camera.lookAt(0, 0, 0);
-      
-      // 2. Center the pivot point
       ctrl.target.set(0, 0, 0);
-
-      // 3. LOCK Rotation
       ctrl.enableRotate = false; 
-      
-      // 4. Enable Panning (moves map X/Z)
       ctrl.screenSpacePanning = true; 
       ctrl.enableZoom = true;
-
-      // 5. Hard constraints on angles (0 = Top down)
       ctrl.minPolarAngle = 0;
       ctrl.maxPolarAngle = 0;
-      
-      // 6. Zoom constraints
       ctrl.minDistance = 10;
       ctrl.maxDistance = 150;
-
     } else if (mode === '3D') {
-      // --- 3D VIEW (Isometric-ish) ---
-      
-      // 1. Set Isometric angle
       camera.position.set(12, 20, 12);
       camera.lookAt(0, 0, 0);
       ctrl.target.set(0, 0, 0);
-
-      // 2. Enable Rotation
       ctrl.enableRotate = true;
-      ctrl.screenSpacePanning = false; // Standard 3D orbit
-      
-      // 3. Allow looking around, but stop at floor
+      ctrl.screenSpacePanning = false; 
       ctrl.minPolarAngle = 0;
       ctrl.maxPolarAngle = Math.PI / 2.1; 
-      
       ctrl.minDistance = 2;
       ctrl.maxDistance = 50;
     }
-    
-    // Tour mode is handled by PointerLockControls
     
     ctrl.update();
   }, [mode, camera, controls]);
 
   return null;
 };
-
-// --- Main Canvas ---
 
 const DesignCanvas = forwardRef(({ 
    items, selectedId, setSelectedId, updateItem, deleteItem, 
@@ -146,7 +113,6 @@ const DesignCanvas = forwardRef(({
       ref={canvasRef}
       shadows="soft"
       dpr={dpr}
-      // UPDATE: Bound FOV to the roomConfig state
       camera={{ position: [10, 10, 10], fov: roomConfig.cameraFov || 50 }}
       gl={{ 
         preserveDrawingBuffer: true,
@@ -166,7 +132,6 @@ const DesignCanvas = forwardRef(({
 
       <color attach="background" args={[config.bg]} />
 
-      {/* --- LIGHTING --- */}
       <ambientLight intensity={config.ambient} />
       <directionalLight 
         position={config.sun} 
@@ -178,22 +143,16 @@ const DesignCanvas = forwardRef(({
         <orthographicCamera attach="shadow-camera" args={[-20, 20, 20, -20]} />
       </directionalLight>
 
-      {/* UPDATE: Conditional Soft Shadows based on toggle */}
       {!is2D && roomConfig.shadowsEnabled !== false && (
         <SoftShadows size={10} samples={12} focus={0.5} />
       )}
 
-      <Environment 
-        files={config.file} 
-        background={false} 
-        blur={0.5} 
-      />
+      <Environment files={config.file} background={false} blur={0.5} />
 
       {roomConfig.lightingMode !== 'Night' && (
         <Sky sunPosition={config.sun} turbidity={8} rayleigh={6} />
       )}
 
-      {/* --- SCENE CONTENT --- */}
       <group position={[0, -0.01, 0]}>
         <Room
   width={roomConfig.width}
@@ -203,21 +162,19 @@ const DesignCanvas = forwardRef(({
   floorTexture={roomConfig.floorTexture}
 />
         
-        {/* UPDATE: Conditional Blueprint Grid based on toggle */}
         {is2D && roomConfig.showGrid !== false && (
            <Grid 
              args={[100, 100]} 
              sectionSize={2} 
-             sectionColor="#333333" // Dark technical lines
-             cellColor="#999999"    // Softer sub-lines
-             position={[0, 0.05, 0]} // Slightly above floor to prevent z-fighting
+             sectionColor="#333333"
+             cellColor="#999999"    
+             position={[0, 0.05, 0]} 
              infiniteGrid 
              fadeDistance={200} 
              opacity={0.8}
            />
         )}
 
-        {/* Shadows (Only in 3D/Tour) */}
         {!is2D && (
            <ContactShadows 
              resolution={1024} 
@@ -247,7 +204,6 @@ const DesignCanvas = forwardRef(({
         </group>
       </Suspense>
 
-      {/* Post Processing (Only in 3D/Tour) */}
       {!is2D && (
         <EffectComposer disableNormalPass>
           <Bloom luminanceThreshold={1.5} mipmapBlur intensity={0.4} radius={0.6} />
@@ -256,7 +212,6 @@ const DesignCanvas = forwardRef(({
         </EffectComposer>
       )}
 
-      {/* --- CONTROLS LOGIC --- */}
       <CameraController mode={mode} />
 
       {isTour ? (
@@ -271,9 +226,7 @@ const DesignCanvas = forwardRef(({
             enabled={!isDragging}
             enableDamping 
             dampingFactor={0.1}
-            // Constraints are dynamically set by CameraController
           />
-          {/* Gizmo only for 3D View */}
           {!is2D && (
             <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
               <GizmoViewport labelColor="white" axisHeadScale={1} />

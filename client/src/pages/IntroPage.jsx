@@ -6,34 +6,48 @@ import woodBg from '../assets/wood-bg.jpg';
 export default function IntroPage() {
   const navigate = useNavigate();
 
-  const handleRoleSelect = (role) => {
-    navigate('/login', { state: { role } });
-  };
-
   return (
     <div style={styles.wrapper}>
       <div style={styles.container}>
-        {/* Branding Section */}
+        {/* Branding & Welcome Section */}
         <div style={styles.brandSection}>
-          <img src={logoImage} alt="Woodland Furnitures Logo" style={styles.logoImage} />
-          <p style={styles.tagline}>Premium Interior Visualization System</p>
+          <img src={logoImage} alt="WoodLand Furniture Logo" style={styles.logoImage} />
+          
+          <h1 style={styles.welcomeTitle}>Welcome to WoodLand</h1>
+          
+          <p style={styles.description}>
+            Step into a world of premium interior design. Plan, visualize, and 
+            perfect your living spaces with our advanced 3D room visualization system. 
+            Whether you are looking for inspiration or ready to design your dream home, 
+            we are here to bring your vision to life.
+          </p>
         </div>
 
-        <h2 style={styles.instruction}>Select Your Portal</h2>
-
-        {/* Role Selection Cards */}
-        <div style={styles.cardContainer}>
-          <div style={styles.roleCard} onClick={() => handleRoleSelect('Designer')}>
-            <div style={styles.icon}>📐</div>
-            <h3 style={styles.roleTitle}>Designer</h3>
-            <p style={styles.roleDesc}>Client Consultations & Room Visualization</p>
-          </div>
-
-          <div style={styles.roleCard} onClick={() => handleRoleSelect('Admin')}>
-            <div style={styles.icon}>📋</div>
-            <h3 style={styles.roleTitle}>Admin</h3>
-            <p style={styles.roleDesc}>System Management & Inventory Control</p>
-          </div>
+        {/* Action Buttons */}
+        <div style={styles.buttonContainer}>
+          <button 
+            style={styles.primaryButton} 
+            onClick={() => navigate('/login', { state: { action: 'login' } })}
+            onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
+            onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
+          >
+            Log In
+          </button>
+          
+          <button 
+            style={styles.secondaryButton} 
+            onClick={() => navigate('/login', { state: { action: 'signup' } })}
+            onMouseOver={(e) => {
+              e.target.style.backgroundColor = '#f1f5f9';
+              e.target.style.transform = 'translateY(-2px)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.backgroundColor = 'transparent';
+              e.target.style.transform = 'translateY(0)';
+            }}
+          >
+            Sign Up
+          </button>
         </div>
       </div>
     </div>
@@ -49,7 +63,6 @@ const styles = {
     width: '100vw',
     padding: '40px 20px',
     boxSizing: 'border-box',
-    // Removed the white gradient so the pure wood shows through
     backgroundImage: `url(${woodBg})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
@@ -58,34 +71,59 @@ const styles = {
   },
   container: { 
     textAlign: 'center', 
-    maxWidth: '800px', 
-    padding: '40px', 
+    maxWidth: '650px', 
+    padding: '50px 40px', 
     zIndex: 1, 
-    // Kept the white background on the container so text is easy to read
     background: 'rgba(255, 255, 255, 0.95)', 
     borderRadius: '24px', 
-    boxShadow: '0 15px 50px rgba(0,0,0,0.3)' // Slightly stronger shadow for the wood bg
+    boxShadow: '0 15px 50px rgba(0,0,0,0.3)'
   },
-  brandSection: { marginBottom: '40px' },
+  brandSection: { marginBottom: '35px' },
   logoImage: { 
-    width: '280px', 
+    width: '260px', 
     height: 'auto',
-    marginBottom: '15px'
+    marginBottom: '20px'
   },
-  tagline: { color: '#64748b', fontSize: '15px', marginTop: '10px', fontWeight: '400', letterSpacing: '1px' },
-  instruction: { color: '#334155', fontSize: '18px', marginBottom: '30px', fontWeight: '500' },
-  cardContainer: { display: 'flex', gap: '24px', justifyContent: 'center', flexWrap: 'wrap' },
-  roleCard: {
-    width: '240px',
-    padding: '30px 20px',
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    border: '1px solid #e2e8f0',
+  welcomeTitle: { 
+    color: '#2A4E3B', 
+    fontSize: '28px', 
+    fontWeight: '700', 
+    margin: '0 0 15px 0',
+    letterSpacing: '0.5px'
+  },
+  description: { 
+    color: '#475569', 
+    fontSize: '16px', 
+    lineHeight: '1.7', 
+    margin: '0', 
+    fontWeight: '400' 
+  },
+  buttonContainer: { 
+    display: 'flex', 
+    gap: '20px', 
+    justifyContent: 'center' 
+  },
+  primaryButton: {
+    padding: '14px 36px',
+    backgroundColor: '#2A4E3B',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
     cursor: 'pointer',
-    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-    boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+    transition: 'all 0.2s ease',
+    boxShadow: '0 4px 12px rgba(42, 78, 59, 0.2)'
   },
-  icon: { fontSize: '40px', marginBottom: '15px' },
-  roleTitle: { color: '#2A4E3B', fontSize: '20px', fontWeight: '600', marginBottom: '8px' },
-  roleDesc: { color: '#64748b', fontSize: '13px', lineHeight: '1.5' }
+  secondaryButton: {
+    padding: '14px 36px',
+    backgroundColor: 'transparent',
+    color: '#2A4E3B',
+    border: '2px solid #2A4E3B',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  }
 };

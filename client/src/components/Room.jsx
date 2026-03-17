@@ -26,6 +26,9 @@ export default function Room({
   wallMap.anisotropy = 16;
   wallMap.colorSpace = THREE.SRGBColorSpace;
 
+  const wallThickness = 0.2;
+  const wallHeight = 5;
+
   return (
     <group>
       {/* Floor */}
