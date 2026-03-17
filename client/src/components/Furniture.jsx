@@ -2,37 +2,56 @@ import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { TransformControls, Html, useGLTF, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 
-export default function Furniture({ 
-  data, 
-  isSelected, 
-  onSelect, 
-  onChange, 
-  mode, 
-  setIsDragging, 
-  roomConfig 
+function getTargetSizeByType(type = '', roomConfig) {
+  const t = type.toLowerCase();
+  const avgRoom = ((roomConfig?.width || 15) + (roomConfig?.depth || 15)) / 2;
+  const roomFactor = avgRoom <= 10 ? 0.9 : avgRoom <= 18 ? 1 : 1.1;
+
+  if (t.includes('bed')) return 2.2 * roomFactor;
+  if (t.includes('sofa') || t.includes('couch')) return 1.8 * roomFactor;
+  if (t.includes('dining table')) return 1.6 * roomFactor;
+  if (t.includes('table') || t.includes('desk')) return 1.4 * roomFactor;
+  if (t.includes('chair') || t.includes('stool')) return 1.0 * roomFactor;
+  if (t.includes('lamp')) return 1.2 * roomFactor;
+  if (t.includes('wardrobe') || t.includes('cabinet') || t.includes('closet')) return 2.0 * roomFactor;
+  if (t.includes('shelf') || t.includes('bookshelf')) return 1.8 * roomFactor;
+  if (t.includes('tv stand')) return 1.4 * roomFactor;
+
+  return 1.4 * roomFactor;
+}
+
+export default function Furniture({
+  data,
+  isSelected,
+  onSelect,
+  onChange,
+  mode,
+  setIsDragging,
+  roomConfig
 }) {
   const { id, type, position, rotation, scale, modelUrl } = data;
   const meshRef = useRef();
   const [hovered, setHovered] = useState(false);
 
-  // 1. Safe Model Loading
   const modelPath = modelUrl || `/models/${type.toLowerCase()}.glb`;
   const { scene } = useGLTF(modelPath);
 
-  // 2. Clone & Prepare Scene (Shadows & Materials)
   const clone = useMemo(() => {
     if (!scene) return null;
+
     const clonedScene = scene.clone();
-    
+
     clonedScene.traverse((node) => {
       if (node.isMesh) {
         node.castShadow = true;
         node.receiveShadow = true;
+
         if (node.material) {
-           node.material = node.material.clone(); 
+          node.material = node.material.clone();
         }
       }
     });
+
     return clonedScene;
   }, [scene]);
 
@@ -48,85 +67,83 @@ export default function Furniture({
     };
   }, [clone]);
 
-  // 3. Transform & Proper Collision Logic
+  const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - 0.5);
+  const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - 0.5);
+
   const showTransform = isSelected && mode !== 'Tour';
+
+  const formattedScale = Array.isArray(scale) ? scale : [scale, scale, scale];
+
+  const modelMetrics = useMemo(() => {
+    if (!clone) {
+      return {
+        object: null,
+        autoScale: 1,
+        yOffset: 0,
+        labelHeight: 2,
+      };
+    }
+
+    const temp = clone.clone();
+    const box = new THREE.Box3().setFromObject(temp);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+
+    const maxDim = Math.max(size.x, size.y, size.z, 0.001);
+    const targetSize = getTargetSizeByType(type, roomConfig);
+
+    const autoScale = targetSize / maxDim;
+    const yOffset = -box.min.y * autoScale;
+    const labelHeight = Math.max(1.2, size.y * autoScale + 0.5);
+
+    return {
+      object: clone,
+      autoScale,
+      yOffset,
+      labelHeight,
+    };
+  }, [clone, type, roomConfig]);
+
+  const finalScale = [
+    modelMetrics.autoScale * formattedScale[0],
+    modelMetrics.autoScale * formattedScale[1],
+    modelMetrics.autoScale * formattedScale[2],
+  ];
 
   const handleTransformChange = () => {
     if (!meshRef.current) return;
-    const mesh = meshRef.current;
 
-    // A. Floor Lock (Keep it strictly on the ground)
-    mesh.position.y = 0;
+    const currentPos = meshRef.current.position;
 
-    // B. Real-time Bounding Box Collision
-    // Ensure the matrix is fully updated for this frame before calculating bounds
-    mesh.updateMatrixWorld();
-    
-    // Get the exact world-space bounding box of the model (accounts for rotation/scale)
-    const box = new THREE.Box3().setFromObject(mesh);
-    
-    const roomWidth = roomConfig?.width || 15;
-    const roomDepth = roomConfig?.depth || 15;
+    if (currentPos.y !== 0) currentPos.y = 0;
 
-    // Room inner boundaries
-    const roomMinX = -roomWidth / 2;
-    const roomMaxX = roomWidth / 2;
-    const roomMinZ = -roomDepth / 2;
-    const roomMaxZ = roomDepth / 2;
-
-    let newX = mesh.position.x;
-    let newZ = mesh.position.z;
-
-    // Calculate dimensions of the bounding box itself
-    const boxWidth = box.max.x - box.min.x;
-    const boxDepth = box.max.z - box.min.z;
-
-    // Prevent clipping on the X Axis
-    if (boxWidth > roomWidth) {
-      newX = 0; // Fallback if object is larger than the room itself
-    } else {
-      if (box.min.x < roomMinX) newX += (roomMinX - box.min.x);
-      if (box.max.x > roomMaxX) newX -= (box.max.x - roomMaxX);
-    }
-
-    // Prevent clipping on the Z Axis
-    if (boxDepth > roomDepth) {
-      newZ = 0; // Fallback if object is larger than the room itself
-    } else {
-      if (box.min.z < roomMinZ) newZ += (roomMinZ - box.min.z);
-      if (box.max.z > roomMaxZ) newZ -= (box.max.z - roomMaxZ);
-    }
-
-    // Apply the corrected, collision-safe positions
-    mesh.position.x = newX;
-    mesh.position.z = newZ;
+    currentPos.x = THREE.MathUtils.clamp(currentPos.x, -widthLimit, widthLimit);
+    currentPos.z = THREE.MathUtils.clamp(currentPos.z, -depthLimit, depthLimit);
   };
 
   const handleTransformEnd = () => {
     if (setIsDragging) setIsDragging(false);
-    
+
     if (meshRef.current) {
       onChange(id, {
         position: meshRef.current.position.toArray(),
         rotation: meshRef.current.rotation.toArray(),
-        scale: typeof meshRef.current.scale.toArray === 'function' 
-          ? meshRef.current.scale.toArray() 
-          : [meshRef.current.scale.x, meshRef.current.scale.y, meshRef.current.scale.z],
+        scale: formattedScale,
       });
     }
   };
 
-  // 4. Cursor Logic
   useEffect(() => {
     if (hovered && mode !== 'Tour') {
       document.body.style.cursor = 'grab';
     } else {
       document.body.style.cursor = 'auto';
     }
-    return () => { document.body.style.cursor = 'auto'; };
-  }, [hovered, mode]);
 
-  const formattedScale = Array.isArray(scale) ? scale : [scale, scale, scale];
+    return () => {
+      document.body.style.cursor = 'auto';
+    };
+  }, [hovered, mode]);
 
   return (
     <>
@@ -135,7 +152,7 @@ export default function Furniture({
           object={meshRef}
           mode="translate"
           showY={false}
-          translationSnap={0.05}
+          translationSnap={0.1}
           rotationSnap={Math.PI / 12}
           onMouseDown={() => setIsDragging && setIsDragging(true)}
           onObjectChange={handleTransformChange}
@@ -147,7 +164,7 @@ export default function Furniture({
         ref={meshRef}
         position={position}
         rotation={rotation}
-        scale={formattedScale}
+        scale={finalScale}
         onClick={(e) => {
           e.stopPropagation();
           onSelect(id);
@@ -159,21 +176,31 @@ export default function Furniture({
         onPointerOut={() => setHovered(false)}
         dispose={null}
       >
-        {clone && <primitive object={clone} />}
+        {modelMetrics.object && (
+          <group position={[0, modelMetrics.yOffset, 0]}>
+            <primitive object={modelMetrics.object} />
+          </group>
+        )}
 
         {(isSelected || hovered) && (
-          <Edges 
-            scale={1.02} 
+          <Edges
+            scale={1.02}
             threshold={15}
-            color={isSelected ? "#4facfe" : "#a1a1aa"} 
+            color={isSelected ? '#4facfe' : '#a1a1aa'}
             opacity={isSelected ? 1 : 0.6}
             transparent
           />
         )}
 
         {type === 'Lamp' && (
-          <group position={[0, 1.5, 0]}>
-            <pointLight intensity={2} distance={6} color="#ffeebb" castShadow shadow-bias={-0.001} />
+          <group position={[0, Math.max(1, modelMetrics.labelHeight - 0.6), 0]}>
+            <pointLight
+              intensity={2}
+              distance={6}
+              color="#ffeebb"
+              castShadow
+              shadow-bias={-0.001}
+            />
             <mesh>
               <sphereGeometry args={[0.05, 16, 16]} />
               <meshBasicMaterial color="#ffffff" />
@@ -182,25 +209,33 @@ export default function Furniture({
         )}
 
         {isSelected && (
-          <Html position={[0, 2.2, 0]} center zIndexRange={[100, 0]}>
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.85)',
-              backdropFilter: 'blur(4px)',
-              color: 'white',
-              padding: '6px 12px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              fontWeight: '600',
-              fontFamily: 'system-ui, sans-serif',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              pointerEvents: 'none',
-              transform: 'translate3d(0,0,0)',
-              userSelect: 'none'
-            }}>
+          <Html position={[0, modelMetrics.labelHeight, 0]} center zIndexRange={[100, 0]}>
+            <div
+              style={{
+                background: 'rgba(15, 23, 42, 0.85)',
+                backdropFilter: 'blur(4px)',
+                color: 'white',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '12px',
+                fontWeight: '600',
+                fontFamily: 'system-ui, sans-serif',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                pointerEvents: 'none',
+                userSelect: 'none'
+              }}
+            >
               {type}
-              <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '4px', fontWeight: '400' }}>
+              <div
+                style={{
+                  fontSize: '10px',
+                  color: '#94a3b8',
+                  marginTop: '4px',
+                  fontWeight: '400'
+                }}
+              >
                 X: {position[0].toFixed(1)}m | Z: {position[2].toFixed(1)}m
               </div>
             </div>

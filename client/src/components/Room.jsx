@@ -1,16 +1,30 @@
 import React from 'react';
-import * as THREE from 'three'; 
-import { useLoader } from '@react-three/fiber'; 
+import * as THREE from 'three';
+import { useLoader } from '@react-three/fiber';
 
-export default function Room({ width, depth, wallColor }) {
-  // Load the texture
-  const texture = useLoader(THREE.TextureLoader, '/textures/wood_floor.jpg');
+export default function Room({
+  width,
+  depth,
+  wallColor,
+  wallTexture,
+  floorTexture,
+}) {
+  const [floorMap, wallMap] = useLoader(THREE.TextureLoader, [
+    floorTexture || '/textures/wood_floor.jpg',
+    wallTexture || '/textures/wall_paint.jpg',
+  ]);
 
-  // Configure the texture to repeat (tiling)
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(width / 2, depth / 2);
-  texture.anisotropy = 16;
-  texture.colorSpace = THREE.SRGBColorSpace;
+  // Floor texture settings
+  floorMap.wrapS = floorMap.wrapT = THREE.RepeatWrapping;
+  floorMap.repeat.set(width / 2, depth / 2);
+  floorMap.anisotropy = 16;
+  floorMap.colorSpace = THREE.SRGBColorSpace;
+
+  // Wall texture settings
+  wallMap.wrapS = wallMap.wrapT = THREE.RepeatWrapping;
+  wallMap.repeat.set(4, 2);
+  wallMap.anisotropy = 16;
+  wallMap.colorSpace = THREE.SRGBColorSpace;
 
   const wallThickness = 0.2;
   const wallHeight = 5;
@@ -20,29 +34,47 @@ export default function Room({ width, depth, wallColor }) {
       {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial map={texture} />
-      </mesh>
-      
-      {/* Back Wall - Moved outward so the inner face is perfectly at -depth/2 */}
-      <mesh position={[0, wallHeight / 2, -depth / 2 - wallThickness / 2]} receiveShadow castShadow>
-        <boxGeometry args={[width + wallThickness * 2, wallHeight, wallThickness]} />
-        <meshStandardMaterial color={wallColor} />
+        <meshStandardMaterial map={floorMap} />
       </mesh>
 
-      {/* Left Wall - Moved outward so the inner face is perfectly at -width/2 */}
-      <mesh position={[-width / 2 - wallThickness / 2, wallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
-        <boxGeometry args={[depth, wallHeight, wallThickness]} />
-        <meshStandardMaterial color={wallColor} />
+      {/* Back Wall */}
+      <mesh position={[0, 2.5, -depth / 2]} receiveShadow>
+        <boxGeometry args={[width, 5, 0.2]} />
+        <meshStandardMaterial map={wallMap} color={wallColor} />
       </mesh>
 
-      {/* Right Wall - Moved outward so the inner face is perfectly at width/2 */}
-      <mesh position={[width / 2 + wallThickness / 2, wallHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
-        <boxGeometry args={[depth, wallHeight, wallThickness]} />
-        <meshStandardMaterial color={wallColor} />
+      {/* Left Wall */}
+      <mesh
+        position={[-width / 2, 2.5, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        receiveShadow
+      >
+        <boxGeometry args={[depth, 5, 0.2]} />
+        <meshStandardMaterial map={wallMap} color={wallColor} />
+      </mesh>
+
+      {/* Right Wall */}
+      <mesh
+        position={[width / 2, 2.5, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        receiveShadow
+      >
+        <boxGeometry args={[depth, 5, 0.2]} />
+        <meshStandardMaterial map={wallMap} color={wallColor} />
       </mesh>
     </group>
   );
 }
 
-// Preload to prevent blinking
+// Preload floor textures
 useLoader.preload(THREE.TextureLoader, '/textures/wood_floor.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/tile_floor.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/marble_floor.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/concrete_floor.jpg');
+
+// Preload wall textures
+useLoader.preload(THREE.TextureLoader, '/textures/wall_paint.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/brick_wall.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/concrete_wall.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/wallpaper_wall.jpg');
+useLoader.preload(THREE.TextureLoader, '/textures/wood_panel_wall.jpg');
