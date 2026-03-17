@@ -67,11 +67,7 @@ export default function Furniture({
     };
   }, [clone]);
 
-  const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - 0.5);
-  const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - 0.5);
-
   const showTransform = isSelected && mode !== 'Tour';
-
   const formattedScale = Array.isArray(scale) ? scale : [scale, scale, scale];
 
   const modelMetrics = useMemo(() => {
@@ -81,6 +77,7 @@ export default function Furniture({
         autoScale: 1,
         yOffset: 0,
         labelHeight: 2,
+        baseSize: new THREE.Vector3(1, 1, 1),
       };
     }
 
@@ -101,6 +98,7 @@ export default function Furniture({
       autoScale,
       yOffset,
       labelHeight,
+      baseSize: size, // Exposing base size for collision calculation
     };
   }, [clone, type, roomConfig]);
 
@@ -110,6 +108,18 @@ export default function Furniture({
     modelMetrics.autoScale * formattedScale[2],
   ];
 
+  // --- DYNAMIC COLLISION LOGIC ---
+  // Calculate the maximum radius of the object to prevent corner-clipping when rotated.
+  const actualWidth = modelMetrics.baseSize.x * finalScale[0];
+  const actualDepth = modelMetrics.baseSize.z * finalScale[2];
+  const collisionRadius = Math.sqrt(Math.pow(actualWidth / 2, 2) + Math.pow(actualDepth / 2, 2));
+
+  // The extra gap you want to keep from the wall
+  const wallGap = 0.6; 
+
+  const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - collisionRadius - wallGap);
+  const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - collisionRadius - wallGap);
+
   const handleTransformChange = () => {
     if (!meshRef.current) return;
 
@@ -117,6 +127,7 @@ export default function Furniture({
 
     if (currentPos.y !== 0) currentPos.y = 0;
 
+    // Clamp the position using our new dynamically calculated boundaries
     currentPos.x = THREE.MathUtils.clamp(currentPos.x, -widthLimit, widthLimit);
     currentPos.z = THREE.MathUtils.clamp(currentPos.z, -depthLimit, depthLimit);
   };
