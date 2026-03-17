@@ -51,38 +51,27 @@ const LoadingScreen = () => (
 );
 
 const CameraController = ({ mode }) => {
-  const { camera, controls } = useThree();
+  const { camera } = useThree();
+  const controls = useThree((state) => state.controls);
 
   useEffect(() => {
-    if (!controls?.current) return;
-    const ctrl = controls.current;
+    // Wait until controls are loaded
+    if (!controls) return;
 
-    ctrl.reset();
+    controls.reset();
 
     if (mode === '2D') {
-      camera.position.set(0, 50, 0); 
+      // Small offset on Z (0.001) avoids gimbal lock when looking perfectly down at 0,0,0
+      camera.position.set(0, 50, 0.001); 
       camera.lookAt(0, 0, 0);
-      ctrl.target.set(0, 0, 0);
-      ctrl.enableRotate = false; 
-      ctrl.screenSpacePanning = true; 
-      ctrl.enableZoom = true;
-      ctrl.minPolarAngle = 0;
-      ctrl.maxPolarAngle = 0;
-      ctrl.minDistance = 10;
-      ctrl.maxDistance = 150;
+      controls.target.set(0, 0, 0);
     } else if (mode === '3D') {
       camera.position.set(12, 20, 12);
       camera.lookAt(0, 0, 0);
-      ctrl.target.set(0, 0, 0);
-      ctrl.enableRotate = true;
-      ctrl.screenSpacePanning = false; 
-      ctrl.minPolarAngle = 0;
-      ctrl.maxPolarAngle = Math.PI / 2.1; 
-      ctrl.minDistance = 2;
-      ctrl.maxDistance = 50;
+      controls.target.set(0, 0, 0);
     }
     
-    ctrl.update();
+    controls.update();
   }, [mode, camera, controls]);
 
   return null;
@@ -154,13 +143,15 @@ const DesignCanvas = forwardRef(({
       )}
 
       <group position={[0, -0.01, 0]}>
+        {/* Pass down is2D to hide walls during 2D mode */}
         <Room
-  width={roomConfig.width}
-  depth={roomConfig.depth}
-  wallColor={roomConfig.wallColor}
-  wallTexture={roomConfig.wallTexture}
-  floorTexture={roomConfig.floorTexture}
-/>
+          width={roomConfig.width}
+          depth={roomConfig.depth}
+          wallColor={roomConfig.wallColor}
+          wallTexture={roomConfig.wallTexture}
+          floorTexture={roomConfig.floorTexture}
+          is2D={is2D} 
+        />
         
         {is2D && roomConfig.showGrid !== false && (
            <Grid 
@@ -217,7 +208,7 @@ const DesignCanvas = forwardRef(({
       {isTour ? (
         <>
           <PointerLockControls selector="#tour-overlay" onUnlock={onTourUnlock} />
-          <TourControls active={true} />
+          <TourControls active={true} roomConfig={roomConfig} />
         </>
       ) : (
         <>
@@ -226,6 +217,13 @@ const DesignCanvas = forwardRef(({
             enabled={!isDragging}
             enableDamping 
             dampingFactor={0.1}
+            // DYNAMIC 2D CONSTRAINTS
+            enableRotate={!is2D} // Completely disables spinning/tilting in 2D
+            screenSpacePanning={is2D} // True orthographic-like panning
+            minPolarAngle={0}
+            maxPolarAngle={is2D ? 0 : Math.PI / 2.1} // Locks viewing angle strictly overhead in 2D
+            minDistance={is2D ? 10 : 2}
+            maxDistance={is2D ? 150 : 50}
           />
           {!is2D && (
             <GizmoHelper alignment="bottom-right" margin={[80, 80]}>

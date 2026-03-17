@@ -8,6 +8,7 @@ export default function Room({
   wallColor,
   wallTexture,
   floorTexture,
+  is2D // Accept the new is2D prop
 }) {
   const [floorMap, wallMap] = useLoader(THREE.TextureLoader, [
     floorTexture || '/textures/wood_floor.jpg',
@@ -26,42 +27,44 @@ export default function Room({
   wallMap.anisotropy = 16;
   wallMap.colorSpace = THREE.SRGBColorSpace;
 
-  const wallThickness = 0.2;
-  const wallHeight = 5;
-
   return (
     <group>
-      {/* Floor */}
+      {/* Floor is always visible */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[width, depth]} />
         <meshStandardMaterial map={floorMap} />
       </mesh>
 
-      {/* Back Wall */}
-      <mesh position={[0, 2.5, -depth / 2]} receiveShadow>
-        <boxGeometry args={[width, 5, 0.2]} />
-        <meshStandardMaterial map={wallMap} color={wallColor} />
-      </mesh>
+      {/* Hide walls if in 2D mode to create a pure flat floor-plan */}
+      {!is2D && (
+        <>
+          {/* Back Wall */}
+          <mesh position={[0, 2.5, -depth / 2]} receiveShadow>
+            <boxGeometry args={[width, 5, 0.2]} />
+            <meshStandardMaterial map={wallMap} color={wallColor} />
+          </mesh>
 
-      {/* Left Wall */}
-      <mesh
-        position={[-width / 2, 2.5, 0]}
-        rotation={[0, Math.PI / 2, 0]}
-        receiveShadow
-      >
-        <boxGeometry args={[depth, 5, 0.2]} />
-        <meshStandardMaterial map={wallMap} color={wallColor} />
-      </mesh>
+          {/* Left Wall */}
+          <mesh
+            position={[-width / 2, 2.5, 0]}
+            rotation={[0, Math.PI / 2, 0]}
+            receiveShadow
+          >
+            <boxGeometry args={[depth, 5, 0.2]} />
+            <meshStandardMaterial map={wallMap} color={wallColor} />
+          </mesh>
 
-      {/* Right Wall */}
-      <mesh
-        position={[width / 2, 2.5, 0]}
-        rotation={[0, Math.PI / 2, 0]}
-        receiveShadow
-      >
-        <boxGeometry args={[depth, 5, 0.2]} />
-        <meshStandardMaterial map={wallMap} color={wallColor} />
-      </mesh>
+          {/* Right Wall */}
+          <mesh
+            position={[width / 2, 2.5, 0]}
+            rotation={[0, Math.PI / 2, 0]}
+            receiveShadow
+          >
+            <boxGeometry args={[depth, 5, 0.2]} />
+            <meshStandardMaterial map={wallMap} color={wallColor} />
+          </mesh>
+        </>
+      )}
     </group>
   );
 }

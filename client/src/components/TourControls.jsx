@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-export default function TourControls({ active, onScreenshot }) {
+export default function TourControls({ active, onScreenshot, roomConfig }) {
   const { camera } = useThree();
   const moveState = useRef({ forward: false, backward: false, left: false, right: false });
   const speed = 5;
@@ -28,7 +28,6 @@ export default function TourControls({ active, onScreenshot }) {
           break;
       }
     };
-
 
     const onKeyUp = (e) => {
       switch (e.code) {
@@ -62,7 +61,12 @@ export default function TourControls({ active, onScreenshot }) {
       camera.fov = 50;
       camera.updateProjectionMatrix();
     };
-  }, [active, camera]);
+  }, [active, camera, onScreenshot]);
+
+  // DYNAMIC WALL COLLISION BOUNDARIES
+  const wallGap = 0.5; // Gap to prevent camera near-plane from clipping through walls
+  const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - wallGap);
+  const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - wallGap);
 
   useFrame((_, delta) => {
     if (!active) return;
@@ -77,9 +81,15 @@ export default function TourControls({ active, onScreenshot }) {
       .multiplyScalar(speed * delta)
       .applyEuler(camera.rotation);
 
+    // Calculate new potential position
+    const newX = camera.position.x + direction.x;
+    const newZ = camera.position.z + direction.z;
+
+    // Apply Wall Collision Detection by clamping the X and Z axes
+    camera.position.x = THREE.MathUtils.clamp(newX, -widthLimit, widthLimit);
+    camera.position.z = THREE.MathUtils.clamp(newZ, -depthLimit, depthLimit);
+    
     // Keep Y position fixed at eye level (no flying)
-    camera.position.x += direction.x;
-    camera.position.z += direction.z;
     camera.position.y = 1.6;
   });
 
