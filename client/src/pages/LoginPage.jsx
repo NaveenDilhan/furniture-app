@@ -7,7 +7,9 @@ import woodBg from '../assets/wood-bg.jpg';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const selectedRole = location.state?.role || 'User';
+  
+  // Since we removed the role selection screen, we default the role to 'User'
+  const selectedRole = 'User';
 
   const handleLogin = async (username, password) => {
     try {
@@ -56,14 +58,14 @@ export default function LoginPage() {
       <button 
         onClick={() => navigate('/')} 
         style={pageStyles.backBtn}
-        title="Back to Role Selection"
+        title="Back to Welcome Page"
       >
         <span style={{ transform: 'translateX(-2px)' }}>←</span>
       </button>
 
       <div style={pageStyles.contentContainer}>
         {/* Brand Logo with a subtle glow so it stands out against dark wood */}
-        <img src={logoImage} alt="Woodland Furnitures" style={pageStyles.logoImage} />
+        <img src={logoImage} alt="WoodLand Furniture" style={pageStyles.logoImage} />
         
         <LoginBox 
           onLogin={handleLogin} 
@@ -84,7 +86,6 @@ const pageStyles = {
     width: '100vw',
     padding: '60px 20px', 
     boxSizing: 'border-box',
-    // Pure wood background
     backgroundImage: `url(${woodBg})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
@@ -103,7 +104,6 @@ const pageStyles = {
     width: '240px',
     marginBottom: '25px',
     objectFit: 'contain',
-    // Added a subtle white glow/shadow just in case the wood is too dark for the logo
     filter: 'drop-shadow(0px 4px 15px rgba(255, 255, 255, 0.6))'
   },
   backBtn: {
