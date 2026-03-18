@@ -3,6 +3,7 @@ import React from 'react';
 export default function PropertiesPanel({ selectedItem, selectedId, updateItem, deleteItem, roomConfig }) {
   
   if (!selectedItem) {
+    const isOpening = selectedItem.isOpening;
     return (
       <div className="panel-empty-state">
         <div style={{ fontSize: '2rem', marginBottom: '10px', opacity: 0.5 }}>👆</div>

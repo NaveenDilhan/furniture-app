@@ -37,7 +37,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', // Slightly wider columns
+    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
     gap: '10px',
     padding: '5px 0 15px',
     animation: 'fadeIn 0.3s ease-in-out',
@@ -46,7 +46,7 @@ const styles = {
     background: 'var(--bg-input)',
     border: '1px solid var(--border)',
     borderRadius: '8px',
-    padding: '8px', // Reduced padding slightly to give image more room
+    padding: '8px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -60,8 +60,7 @@ const styles = {
   imageContainer: {
     width: '100%',
     aspectRatio: '1/1',
-    // Used a very light grey so white-background images stand out slightly
-    background: '#f3f4f6', 
+    background: '#f3f4f6',
     borderRadius: '6px',
     overflow: 'hidden',
     display: 'flex',
@@ -84,6 +83,30 @@ const styles = {
   },
 };
 
+// Special built-in wall items
+const openingItems = [
+  {
+    id: 'builtin-door',
+    name: 'Door',
+    type: 'Door',
+    category: 'Openings',
+    price: 0,
+    image: null,
+    isOpening: true,
+    openingType: 'door',
+  },
+  {
+    id: 'builtin-window',
+    name: 'Window',
+    type: 'Window',
+    category: 'Openings',
+    price: 0,
+    image: null,
+    isOpening: true,
+    openingType: 'window',
+  },
+];
+
 // --- Sub-Components ---
 
 const LibraryItem = React.memo(({ item, onClick }) => {
@@ -101,31 +124,33 @@ const LibraryItem = React.memo(({ item, onClick }) => {
         e.currentTarget.style.borderColor = 'var(--border)';
         e.currentTarget.style.transform = 'translateY(0)';
       }}
-      aria-label={`Add ${item.name} for $${item.price}`}
+      aria-label={`Add ${item.name}`}
     >
       <div style={styles.imageContainer}>
         {!imgError && item.image ? (
           <img
             src={item.image}
             alt={item.name}
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover', // CHANGED: 'cover' forces image to fill the square
-              display: 'block' 
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block'
             }}
             onError={() => setImgError(true)}
             loading="lazy"
           />
         ) : (
-          <span style={{ fontSize: '2rem' }}>📦</span>
+          <span style={{ fontSize: '2rem' }}>
+            {item.openingType === 'door' ? '🚪' : item.openingType === 'window' ? '🪟' : '📦'}
+          </span>
         )}
       </div>
-      
+
       <span style={{ fontSize: '0.85rem', fontWeight: '600', lineHeight: '1.2' }}>
         {item.name}
       </span>
-      
+
       <span style={styles.priceTag}>
         ${item.price?.toLocaleString() || '0'}
       </span>
@@ -161,7 +186,7 @@ export default function LibraryPanel({ addItem }) {
   const [furnitureData, setFurnitureData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedCategory, setExpandedCategory] = useState(null);
+  const [expandedCategory, setExpandedCategory] = useState('Openings');
   const [searchTerm, setSearchTerm] = useState('');
 
   const fetchData = useCallback(async () => {
@@ -185,10 +210,18 @@ export default function LibraryPanel({ addItem }) {
   }, [fetchData]);
 
   const groupedData = useMemo(() => {
-    const groups = {};
+    const groups = {
+      Openings: [...openingItems],
+    };
+
     const lowerSearch = searchTerm.toLowerCase();
 
-    furnitureData.forEach(item => {
+    const filteredOpenings = openingItems.filter((item) =>
+      item.name.toLowerCase().includes(lowerSearch)
+    );
+    groups.Openings = filteredOpenings;
+
+    furnitureData.forEach((item) => {
       if (searchTerm && !item.name.toLowerCase().includes(lowerSearch)) {
         return;
       }
@@ -197,22 +230,29 @@ export default function LibraryPanel({ addItem }) {
       if (!groups[type]) groups[type] = [];
       groups[type].push(item);
     });
-    
+
+    if (groups.Openings.length === 0) {
+      delete groups.Openings;
+    }
+
     return groups;
   }, [furnitureData, searchTerm]);
 
-  // Auto-expand on search
   useEffect(() => {
     const keys = Object.keys(groupedData);
     if (searchTerm && keys.length > 0) {
-        setExpandedCategory(keys[0]);
+      setExpandedCategory(keys[0]);
     }
   }, [searchTerm, groupedData]);
 
-  const categories = Object.keys(groupedData).sort();
+  const categories = Object.keys(groupedData).sort((a, b) => {
+    if (a === 'Openings') return -1;
+    if (b === 'Openings') return 1;
+    return a.localeCompare(b);
+  });
 
   const handleCategoryClick = (category) => {
-    setExpandedCategory(prev => prev === category ? null : category);
+    setExpandedCategory((prev) => (prev === category ? null : category));
   };
 
   if (loading && !furnitureData.length) {
@@ -232,9 +272,9 @@ export default function LibraryPanel({ addItem }) {
 
   return (
     <div style={styles.container}>
-      <input 
-        type="text" 
-        placeholder="Search furniture..." 
+      <input
+        type="text"
+        placeholder="Search furniture..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         style={styles.searchInput}
@@ -246,22 +286,22 @@ export default function LibraryPanel({ addItem }) {
         </div>
       )}
 
-      {categories.map(category => (
+      {categories.map((category) => (
         <div key={category}>
-          <CategoryHeader 
-            name={category} 
+          <CategoryHeader
+            name={category}
             count={groupedData[category].length}
-            isOpen={expandedCategory === category} 
-            onClick={() => handleCategoryClick(category)} 
+            isOpen={expandedCategory === category}
+            onClick={() => handleCategoryClick(category)}
           />
-          
+
           {expandedCategory === category && (
             <div style={styles.grid}>
-              {groupedData[category].map(item => (
-                <LibraryItem 
-                  key={item._id || item.id} 
-                  item={item} 
-                  onClick={() => addItem(item)} 
+              {groupedData[category].map((item) => (
+                <LibraryItem
+                  key={item._id || item.id}
+                  item={item}
+                  onClick={() => addItem(item)}
                 />
               ))}
             </div>

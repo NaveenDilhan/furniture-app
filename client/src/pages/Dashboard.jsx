@@ -110,9 +110,50 @@ export default function Dashboard() {
 
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
-  const addItem = (itemData) => {
+ const addItem = (itemData) => {
+  const id = Date.now();
+
+  const isSpecialOpening =
+    typeof itemData === 'object' &&
+    itemData.isOpening === true;
+
+  if (isSpecialOpening) {
+    const isDoor = itemData.openingType === 'door';
+
+    const newOpening = {
+      id,
+      name: itemData.name,
+      type: itemData.type,
+      price: itemData.price || 0,
+
+      // special flags
+      isOpening: true,
+      openingType: itemData.openingType, // 'door' | 'window'
+      wallSide: 'back',
+
+      // position attached to back wall
+      position: [0, 0, -(roomConfig.depth / 2) + 0.11],
+
+      // face into room
+      rotation: [0, 0, 0],
+
+      // editable size data
+      openingWidth: isDoor ? 1.2 : 1.8,
+      openingHeight: isDoor ? 2.2 : 1.2,
+      sillHeight: isDoor ? 0 : 1.0,
+
+      // keep scale for compatibility
+      scale: [1, 1, 1],
+    };
+
+    setItems((prev) => [...prev, newOpening]);
+    setSelectedId(id);
+    showToast(`Added ${newOpening.name}`);
+    return;
+  }
+
   const newItem = {
-    id: Date.now(),
+    id,
     position: [0, 0, 0],
     rotation: [0, 0, 0],
     scale: [1, 1, 1],
@@ -120,7 +161,7 @@ export default function Dashboard() {
 
   if (typeof itemData === 'object') {
     Object.assign(newItem, itemData, {
-      id: Date.now(),
+      id,
       scale: itemData.scale || [1, 1, 1],
     });
   } else {
@@ -129,8 +170,8 @@ export default function Dashboard() {
     newItem.price = 0;
   }
 
-  setItems([...items, newItem]);
-  setSelectedId(newItem.id);
+  setItems((prev) => [...prev, newItem]);
+  setSelectedId(id);
   showToast(`Added ${newItem.name || newItem.type}`);
 };
 

@@ -7,7 +7,7 @@ import {
 } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import * as THREE from 'three';
-
+import WallOpening from './WallOpening';
 import Furniture from './Furniture';
 import Room from './Room';
 import TourControls from './TourControls';
@@ -231,21 +231,33 @@ const DesignCanvas = forwardRef(({
       </group>
 
       <Suspense fallback={<LoadingScreen />}>
-        <group>
-          {items.map((item) => (
-            <Furniture
-              key={item.id}
-              data={item}
-              isSelected={selectedId === item.id}
-              onSelect={setSelectedId}
-              onChange={updateItem}
-              mode={mode}
-              setIsDragging={setIsDragging}
-              roomConfig={roomConfig}
-            />
-          ))}
-        </group>
-      </Suspense>
+  <group>
+    {items.map((item) =>
+      item.isOpening ? (
+        <WallOpening
+          key={item.id}
+          data={item}
+          isSelected={selectedId === item.id}
+          onSelect={setSelectedId}
+          onChange={updateItem}
+          mode={mode}
+          roomConfig={roomConfig}
+        />
+      ) : (
+        <Furniture
+          key={item.id}
+          data={item}
+          isSelected={selectedId === item.id}
+          onSelect={setSelectedId}
+          onChange={updateItem}
+          mode={mode}
+          setIsDragging={setIsDragging}
+          roomConfig={roomConfig}
+        />
+      )
+    )}
+  </group>
+</Suspense>
 
       {/* Post Processing (Only in 3D/Tour) */}
       {!is2D && (
