@@ -16,6 +16,7 @@ const Toast = ({ message }) => (
     {message}
   </div>
 );
+
 const getBaseFurnitureScale = (type = '') => {
   const t = type.toLowerCase();
 
@@ -50,6 +51,7 @@ const getDefaultFurnitureScale = (type, roomConfig) => {
 
   return [finalScale, finalScale, finalScale];
 };
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const canvasRef = useRef();
@@ -65,16 +67,25 @@ export default function Dashboard() {
   const [screenshots, setScreenshots] = useState([]);
   
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showScreenshotsModal, setShowScreenshotsModal] = useState(false); // New State for Screenshots Gallery
+  const [showScreenshotsModal, setShowScreenshotsModal] = useState(false); 
 
+  // UPDATED: Added editFloorMode and deletedTiles
   const [roomConfig, setRoomConfig] = useState({
-  width: 15,
-  depth: 15,
-  wallColor: '#e0e0e0',
-  wallTexture: '/textures/wall_paint.jpg',
-  floorTexture: '/textures/wood_floor.jpg',
-  lightingMode: 'Day'
-});
+    shape: 'Rectangular',  
+    windows: [],           
+    width: 15,
+    depth: 15,
+    wallHeight: 5,
+    wallColor: '#e0e0e0',
+    wallTexture: '/textures/wall_paint.jpg',
+    floorTexture: '/textures/wood_floor.jpg',
+    lightingMode: 'Day',
+    showFrontWall: false,
+    showCeiling: false,
+    showBaseboards: true,
+    editFloorMode: false, 
+    deletedTiles: []      
+  });
 
   const [toast, setToast] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
@@ -111,28 +122,28 @@ export default function Dashboard() {
   const handleLogout = () => { localStorage.removeItem('user'); navigate('/'); };
 
   const addItem = (itemData) => {
-  const newItem = {
-    id: Date.now(),
-    position: [0, 0, 0],
-    rotation: [0, 0, 0],
-    scale: [1, 1, 1],
-  };
-
-  if (typeof itemData === 'object') {
-    Object.assign(newItem, itemData, {
+    const newItem = {
       id: Date.now(),
-      scale: itemData.scale || [1, 1, 1],
-    });
-  } else {
-    newItem.type = itemData;
-    newItem.name = itemData;
-    newItem.price = 0;
-  }
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+    };
 
-  setItems([...items, newItem]);
-  setSelectedId(newItem.id);
-  showToast(`Added ${newItem.name || newItem.type}`);
-};
+    if (typeof itemData === 'object') {
+      Object.assign(newItem, itemData, {
+        id: Date.now(),
+        scale: itemData.scale || [1, 1, 1],
+      });
+    } else {
+      newItem.type = itemData;
+      newItem.name = itemData;
+      newItem.price = 0;
+    }
+
+    setItems([...items, newItem]);
+    setSelectedId(newItem.id);
+    showToast(`Added ${newItem.name || newItem.type}`);
+  };
 
   const updateItem = (id, data) => setItems(prev => prev.map(i => i.id === id ? {...i, ...data} : i));
   
@@ -221,7 +232,7 @@ export default function Dashboard() {
           case 'checkout': setShowCheckout(true); break;
           case 'save-project': setShowSaveModal(true); break;
           case 'load-project': fetchDesigns(); break; 
-          case 'sign-out': handleLogout(); break; // Handled Sign Out from app bar
+          case 'sign-out': handleLogout(); break; 
           case 'take-screenshot': 
             const dataUrl = takeScreenshot();
             if (dataUrl) downloadScreenshot(dataUrl, 'design');
@@ -232,7 +243,6 @@ export default function Dashboard() {
 
       ipcRenderer.on('menu-action', handleMenuAction);
 
-      // Cleanup listener on unmount
       return () => {
         ipcRenderer.removeListener('menu-action', handleMenuAction);
       };
@@ -277,6 +287,7 @@ export default function Dashboard() {
           {sidebarCollapsed ? '▶' : '◀'}
         </button>
 
+        {/* UPDATED: Passed setRoomConfig down to DesignCanvas */}
         <DesignCanvas
           ref={canvasRef}
           items={items}
@@ -286,6 +297,7 @@ export default function Dashboard() {
           deleteItem={deleteItem}
           mode={mode}
           roomConfig={roomConfig}
+          setRoomConfig={setRoomConfig} 
           onTourUnlock={handleTourUnlock}
         />
 

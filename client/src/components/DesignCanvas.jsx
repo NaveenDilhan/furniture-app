@@ -50,19 +50,17 @@ const LoadingScreen = () => (
   </Html>
 );
 
-const CameraController = ({ mode }) => {
+const CameraController = ({ mode, roomConfig }) => {
   const { camera } = useThree();
   const controls = useThree((state) => state.controls);
 
   useEffect(() => {
-    // Wait until controls are loaded
     if (!controls) return;
-
     controls.reset();
 
     if (mode === '2D') {
-      // Small offset on Z (0.001) avoids gimbal lock when looking perfectly down at 0,0,0
-      camera.position.set(0, 50, 0.001); 
+      const maxDim = Math.max(roomConfig.width || 10, roomConfig.depth || 10);
+      camera.position.set(0, maxDim * 1.5, 0.001); 
       camera.lookAt(0, 0, 0);
       controls.target.set(0, 0, 0);
     } else if (mode === '3D') {
@@ -72,14 +70,14 @@ const CameraController = ({ mode }) => {
     }
     
     controls.update();
-  }, [mode, camera, controls]);
+  }, [mode, camera, controls, roomConfig.width, roomConfig.depth]);
 
   return null;
 };
 
 const DesignCanvas = forwardRef(({ 
    items, selectedId, setSelectedId, updateItem, deleteItem, 
-   mode, roomConfig, onTourUnlock 
+   mode, roomConfig, setRoomConfig, onTourUnlock 
 }, ref) => {
   const canvasRef = useRef();
   const [dpr, setDpr] = useState(1);
@@ -142,38 +140,33 @@ const DesignCanvas = forwardRef(({
         <Sky sunPosition={config.sun} turbidity={8} rayleigh={6} />
       )}
 
-      <group position={[0, -0.01, 0]}>
-        {/* Updated Room component with new architectural features */}
+      <group position={[0, 0, 0]}>
+        {/* Pass the full roomConfig and the setter down to enable the interactive Floor Editor */}
         <Room
-          width={roomConfig.width || 10}
-          depth={roomConfig.depth || 10}
-          wallHeight={roomConfig.wallHeight || 5}
-          wallColor={roomConfig.wallColor || '#ffffff'}
-          wallTexture={roomConfig.wallTexture}
-          floorTexture={roomConfig.floorTexture}
+          roomConfig={roomConfig}
+          setRoomConfig={setRoomConfig}
           is2D={is2D}
-          showFrontWall={roomConfig.showFrontWall}
-          showCeiling={roomConfig.showCeiling}
-          showBaseboards={roomConfig.showBaseboards !== false}
         />
         
-        {is2D && roomConfig.showGrid !== false && (
+        {/* Hide standard grid when editing floor to prevent visual clutter */}
+        {is2D && roomConfig.showGrid !== false && !roomConfig.editFloorMode && (
            <Grid 
              args={[100, 100]} 
-             sectionSize={2} 
-             sectionColor="#333333"
-             cellColor="#999999"    
-             position={[0, 0.05, 0]} 
+             sectionSize={1}
+             sectionColor="#666666"
+             cellColor="#cccccc"    
+             position={[0, 0.01, 0]} 
              infiniteGrid 
-             fadeDistance={200} 
-             opacity={0.8}
+             fadeDistance={300} 
+             opacity={0.6}
            />
         )}
 
         {!is2D && (
            <ContactShadows 
+             position={[0, 0.01, 0]} 
              resolution={1024} 
-             scale={roomConfig.width * 2} 
+             scale={Math.max(roomConfig.width || 10, roomConfig.depth || 10) * 2} 
              blur={2} 
              opacity={0.4} 
              far={1} 
@@ -207,7 +200,7 @@ const DesignCanvas = forwardRef(({
         </EffectComposer>
       )}
 
-      <CameraController mode={mode} />
+      <CameraController mode={mode} roomConfig={roomConfig}/>
 
       {isTour ? (
         <>
@@ -221,13 +214,12 @@ const DesignCanvas = forwardRef(({
             enabled={!isDragging}
             enableDamping 
             dampingFactor={0.1}
-            // DYNAMIC 2D CONSTRAINTS
-            enableRotate={!is2D} // Completely disables spinning/tilting in 2D
-            screenSpacePanning={is2D} // True orthographic-like panning
+            enableRotate={!is2D}
+            screenSpacePanning={is2D} 
             minPolarAngle={0}
-            maxPolarAngle={is2D ? 0 : Math.PI / 2.1} // Locks viewing angle strictly overhead in 2D
+            maxPolarAngle={is2D ? 0 : Math.PI / 2.1} 
             minDistance={is2D ? 10 : 2}
-            maxDistance={is2D ? 150 : 50}
+            maxDistance={is2D ? 300 : 50}
           />
           {!is2D && (
             <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
