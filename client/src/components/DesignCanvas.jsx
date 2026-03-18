@@ -143,14 +143,18 @@ const DesignCanvas = forwardRef(({
       )}
 
       <group position={[0, -0.01, 0]}>
-        {/* Pass down is2D to hide walls during 2D mode */}
+        {/* Updated Room component with new architectural features */}
         <Room
-          width={roomConfig.width}
-          depth={roomConfig.depth}
-          wallColor={roomConfig.wallColor}
+          width={roomConfig.width || 10}
+          depth={roomConfig.depth || 10}
+          wallHeight={roomConfig.wallHeight || 5}
+          wallColor={roomConfig.wallColor || '#ffffff'}
           wallTexture={roomConfig.wallTexture}
           floorTexture={roomConfig.floorTexture}
-          is2D={is2D} 
+          is2D={is2D}
+          showFrontWall={roomConfig.showFrontWall}
+          showCeiling={roomConfig.showCeiling}
+          showBaseboards={roomConfig.showBaseboards !== false}
         />
         
         {is2D && roomConfig.showGrid !== false && (

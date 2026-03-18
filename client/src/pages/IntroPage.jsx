@@ -23,7 +23,7 @@ export default function IntroPage() {
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Button */}
         <div style={styles.buttonContainer}>
           <button 
             style={styles.primaryButton} 
@@ -31,22 +31,7 @@ export default function IntroPage() {
             onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
             onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
           >
-            Log In
-          </button>
-          
-          <button 
-            style={styles.secondaryButton} 
-            onClick={() => navigate('/login', { state: { action: 'signup' } })}
-            onMouseOver={(e) => {
-              e.target.style.backgroundColor = '#f1f5f9';
-              e.target.style.transform = 'translateY(-2px)';
-            }}
-            onMouseOut={(e) => {
-              e.target.style.backgroundColor = 'transparent';
-              e.target.style.transform = 'translateY(0)';
-            }}
-          >
-            Sign Up
+            Get Started
           </button>
         </div>
       </div>
@@ -100,7 +85,6 @@ const styles = {
   },
   buttonContainer: { 
     display: 'flex', 
-    gap: '20px', 
     justifyContent: 'center' 
   },
   primaryButton: {
@@ -114,16 +98,5 @@ const styles = {
     cursor: 'pointer',
     transition: 'all 0.2s ease',
     boxShadow: '0 4px 12px rgba(42, 78, 59, 0.2)'
-  },
-  secondaryButton: {
-    padding: '14px 36px',
-    backgroundColor: 'transparent',
-    color: '#2A4E3B',
-    border: '2px solid #2A4E3B',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease'
   }
 };
