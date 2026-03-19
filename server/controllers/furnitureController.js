@@ -1,8 +1,6 @@
-// server/controllers/furnitureController.js
 const Furniture = require('../models/Furniture');
 
-// @desc    Get all furniture items
-// @route   GET /api/furniture
+
 exports.getAllFurniture = async (req, res) => {
   try {
     const items = await Furniture.find();
@@ -12,8 +10,7 @@ exports.getAllFurniture = async (req, res) => {
   }
 };
 
-// @desc    Add a furniture item (Use this to populate your DB initially)
-// @route   POST /api/furniture
+
 exports.addFurniture = async (req, res) => {
   const { id, name, type, modelUrl, image } = req.body;
   

@@ -4,10 +4,9 @@ export default function CheckoutModal({ isOpen, onClose, items, onOrderSuccess }
   const [customer, setCustomer] = useState({ name: '', email: '', phone: '', address: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Calculate Cart Totals
+
   const { cartItems, totalAmount } = useMemo(() => {
     const total = items.reduce((sum, item) => sum + (item.price || 0), 0);
-    // Group items for display
     const grouped = items.reduce((acc, item) => {
       const existing = acc.find(i => i.name === (item.name || item.type));
       if (existing) existing.quantity += 1;
@@ -60,7 +59,6 @@ export default function CheckoutModal({ isOpen, onClose, items, onOrderSuccess }
         color: '#eee'
       }}>
         
-        {/* Left: Order Summary */}
         <div style={{ flex: 1, borderRight: '1px solid #333', paddingRight: '30px' }}>
           <h2 style={{ marginTop: 0 }}>Order Summary</h2>
           <div style={{ maxHeight: '300px', overflowY: 'auto', marginBottom: '20px' }}>
@@ -91,7 +89,6 @@ export default function CheckoutModal({ isOpen, onClose, items, onOrderSuccess }
           </div>
         </div>
 
-        {/* Right: Customer Form */}
         <div style={{ flex: 1 }}>
           <h2 style={{ marginTop: 0 }}>Customer Details</h2>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>

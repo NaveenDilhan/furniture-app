@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 export default function LoginBox({ onLogin, onRegister, role }) {
-  const [view, setView] = useState('login'); // 'login', 'register', or 'forgot'
+  const [view, setView] = useState('login'); 
   const [formData, setFormData] = useState({ 
     username: '', 
     email: '',
@@ -60,7 +60,6 @@ export default function LoginBox({ onLogin, onRegister, role }) {
       {error && <div style={styles.errorAlert}>{error}</div>}
 
       <form onSubmit={handleSubmit}>
-        {/* Username field: Hidden during 'forgot password' */}
         {view !== 'forgot' && (
           <>
             <label style={styles.label}>Username</label>
@@ -75,7 +74,6 @@ export default function LoginBox({ onLogin, onRegister, role }) {
           </>
         )}
 
-        {/* Email field: Required for Register and Forgot Password */}
         {(view === 'register' || view === 'forgot') && (
           <>
             <label style={styles.label}>Email Address</label>
@@ -91,7 +89,6 @@ export default function LoginBox({ onLogin, onRegister, role }) {
           </>
         )}
 
-        {/* Password field: Hidden during 'forgot password' */}
         {view !== 'forgot' && (
           <>
             <label style={styles.label}>Password</label>
@@ -107,7 +104,6 @@ export default function LoginBox({ onLogin, onRegister, role }) {
           </>
         )}
         
-        {/* Confirm Password: Only for Registration */}
         {view === 'register' && (
           <>
             <label style={styles.label}>Confirm Password</label>
@@ -123,7 +119,6 @@ export default function LoginBox({ onLogin, onRegister, role }) {
           </>
         )}
 
-        {/* Forgot Password Link: Only on Login view */}
         {view === 'login' && (
           <div style={{ textAlign: 'right', marginBottom: '14px' }}>
             <button type="button" onClick={() => switchView('forgot')} style={styles.smallLink}>
@@ -157,14 +152,14 @@ export default function LoginBox({ onLogin, onRegister, role }) {
 const styles = {
   card: { 
     width: '380px', 
-    padding: '35px', // Reduced padding to fit smaller screens
+    padding: '35px', 
     backgroundColor: '#ffffff', 
     borderRadius: '16px', 
     boxShadow: '0 20px 40px rgba(0, 0, 0, 0.08)', 
     border: '1px solid #f1f5f9',
     boxSizing: 'border-box'
   },
-  header: { marginBottom: '25px', textAlign: 'center' }, // Tighter spacing
+  header: { marginBottom: '25px', textAlign: 'center' }, 
   roleBadge: { 
     display: 'inline-block', 
     padding: '6px 14px', 
@@ -189,14 +184,14 @@ const styles = {
     display: 'block', 
     color: '#475569', 
     fontSize: '12px', 
-    marginBottom: '4px', // Tighter spacing
+    marginBottom: '4px', 
     fontWeight: '500' 
   },
   input: { 
     display: 'block', 
     width: '100%', 
-    padding: '10px 14px', // Thinner inputs
-    marginBottom: '14px', // Tighter spacing
+    padding: '10px 14px', 
+    marginBottom: '14px', 
     borderRadius: '8px', 
     border: '1px solid #cbd5e1', 
     backgroundColor: '#f8fafc', 
@@ -208,7 +203,7 @@ const styles = {
   },
   btn: { 
     width: '100%', 
-    padding: '12px', // Thinner button
+    padding: '12px', 
     marginTop: '6px', 
     cursor: 'pointer', 
     backgroundColor: '#2A4E3B', 
@@ -241,7 +236,7 @@ const styles = {
     textAlign: 'center', 
     fontSize: '13px', 
     borderTop: '1px solid #f1f5f9', 
-    paddingTop: '16px' // Tighter spacing
+    paddingTop: '16px' 
   },
   errorAlert: { 
     backgroundColor: '#fef2f2', 

@@ -8,7 +8,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Since we removed the role selection screen, we default the role to 'User'
+
   const selectedRole = 'User';
 
   const handleLogin = async (username, password) => {
@@ -64,7 +64,6 @@ export default function LoginPage() {
       </button>
 
       <div style={pageStyles.contentContainer}>
-        {/* Brand Logo with a subtle glow so it stands out against dark wood */}
         <img src={logoImage} alt="WoodLand Furniture" style={pageStyles.logoImage} />
         
         <LoginBox 

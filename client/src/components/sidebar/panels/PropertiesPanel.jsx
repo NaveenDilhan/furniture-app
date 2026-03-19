@@ -13,25 +13,21 @@ export default function PropertiesPanel({ selectedItem, selectedId, updateItem, 
 
   // --- Handlers ---
 
-  // Handle direct number inputs (X, Z positions)
   const handlePosChange = (axis, value) => {
     const newPos = [...selectedItem.position];
     newPos[axis] = parseFloat(value);
     updateItem(selectedId, { position: newPos });
   };
 
-  // Relative movement (Nudge)
   const nudgeItem = (axis, amount) => {
     const newPos = [...selectedItem.position];
     newPos[axis] = parseFloat((newPos[axis] + amount).toFixed(2));
     updateItem(selectedId, { position: newPos });
   };
 
-  // Rotation logic (converts Radians <-> Degrees for UI)
   const currentRotationDeg = Math.round(selectedItem.rotation[1] * (180 / Math.PI));
   
   const setRotation = (deg) => {
-    // Normalize degree to 0-360
     const normalizedDeg = ((deg % 360) + 360) % 360; 
     const rad = normalizedDeg * (Math.PI / 180);
     const newRot = [...selectedItem.rotation];
@@ -40,7 +36,6 @@ export default function PropertiesPanel({ selectedItem, selectedId, updateItem, 
   };
 
   const handleColorChange = (e) => {
-    // Only works if your object structure supports a 'color' prop
     updateItem(selectedId, { color: e.target.value });
   };
 
@@ -53,7 +48,6 @@ export default function PropertiesPanel({ selectedItem, selectedId, updateItem, 
     updateItem(selectedId, { position: [x, 0, z], rotation: [0, rotY, 0] });
   };
 
-  // Calculated values for measurements
   const posX = selectedItem.position[0];
   const posZ = selectedItem.position[2];
   const distRight = ((roomConfig.width / 2) - posX).toFixed(2);
@@ -61,7 +55,6 @@ export default function PropertiesPanel({ selectedItem, selectedId, updateItem, 
 
   return (
     <div className="properties-panel">
-      {/* Header */}
       <div className="panel-header">
         <h4 className="panel-title">
           <span className="icon">🛠</span> {selectedItem.type}

@@ -9,7 +9,7 @@ export default function CustomModal({ title, isOpen, onClose, onSubmit, placehol
     e.preventDefault();
     if (inputValue.trim()) {
       onSubmit(inputValue);
-      setInputValue(''); // Reset after submit
+      setInputValue(''); 
       onClose();
     }
   };

@@ -20,14 +20,13 @@ const UserSchema = new mongoose.Schema({
   password: { 
     type: String, 
     required: [true, 'Please add a password'],
-    minlength: 6 // Basic security requirement
+    minlength: 6 
   },
 }, {
-  timestamps: true // Automatically creates 'createdAt' and 'updatedAt' fields
+  timestamps: true 
 });
 
-// --- SECURITY UPGRADE ---
-// Before saving, encrypt the password
+
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     next();

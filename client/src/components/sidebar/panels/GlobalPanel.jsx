@@ -1,4 +1,3 @@
-// client/src/components/sidebar/panels/GlobalPanel.jsx
 import React from 'react';
 
 export default function GlobalPanel({ roomConfig, setRoomConfig }) {
@@ -25,7 +24,6 @@ export default function GlobalPanel({ roomConfig, setRoomConfig }) {
         Visual Settings
       </h4>
       
-      {/* Suggestion 1: Blueprint Grid Toggle */}
       <div className="input-group" style={toggleRowStyle}>
         <label className="label" style={{ marginBottom: 0 }}>Show Blueprint Grid</label>
         <input 
@@ -36,7 +34,6 @@ export default function GlobalPanel({ roomConfig, setRoomConfig }) {
         />
       </div>
 
-      {/* Suggestion 2: Shadow Quality Toggle */}
       <div className="input-group" style={toggleRowStyle}>
         <label className="label" style={{ marginBottom: 0 }}>Enable Soft Shadows</label>
         <input 
@@ -51,7 +48,6 @@ export default function GlobalPanel({ roomConfig, setRoomConfig }) {
         Camera Settings
       </h4>
 
-      {/* Suggestion 3: Camera Field of View Slider */}
       <div className="input-group">
         <label className="label" style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span>Field of View (FOV)</span>
@@ -70,7 +66,7 @@ export default function GlobalPanel({ roomConfig, setRoomConfig }) {
   );
 }
 
-// Inline styles for layout
+
 const toggleRowStyle = {
   display: 'flex', 
   justifyContent: 'space-between', 

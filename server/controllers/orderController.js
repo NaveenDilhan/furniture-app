@@ -1,7 +1,6 @@
 const Order = require('../models/Order');
 
-// @desc    Create a new order
-// @route   POST /api/orders
+
 exports.createOrder = async (req, res) => {
   try {
     const { customer, items, totalAmount } = req.body;
@@ -19,8 +18,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// @desc    Get all orders (Optional, for admin)
-// @route   GET /api/orders
+
 exports.getOrders = async (req, res) => {
   try {
     const orders = await Order.find().sort({ createdAt: -1 });

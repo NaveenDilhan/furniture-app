@@ -1,7 +1,6 @@
 const Design = require('../models/Design');
 
-// @desc    Save a design
-// @route   POST /api/designs
+
 exports.saveDesign = async (req, res) => {
   try {
     const { userId, name, items } = req.body;
@@ -12,8 +11,7 @@ exports.saveDesign = async (req, res) => {
   }
 };
 
-// @desc    Get user designs
-// @route   GET /api/designs/:userId
+
 exports.getDesigns = async (req, res) => {
   try {
     const designs = await Design.find({ userId: req.params.userId });
@@ -24,8 +22,7 @@ exports.getDesigns = async (req, res) => {
 };
 
 
-// @desc    Update a single furniture item in a design
-// @route   PATCH /api/designs/:designId/furniture/:itemId
+
 exports.updateFurnitureItem = async (req, res) => {
   try {
     const { designId, itemId } = req.params;

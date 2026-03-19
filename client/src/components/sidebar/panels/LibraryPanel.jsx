@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
-// Configuration
+
 const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:5000/api';
 
-// --- Styles ---
+
 const styles = {
   container: {
     display: 'flex',
@@ -37,7 +37,7 @@ const styles = {
   },
   grid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', // Slightly wider columns
+    gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
     gap: '10px',
     padding: '5px 0 15px',
     animation: 'fadeIn 0.3s ease-in-out',
@@ -46,7 +46,7 @@ const styles = {
     background: 'var(--bg-input)',
     border: '1px solid var(--border)',
     borderRadius: '8px',
-    padding: '8px', // Reduced padding slightly to give image more room
+    padding: '8px', 
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -60,7 +60,7 @@ const styles = {
   imageContainer: {
     width: '100%',
     aspectRatio: '1/1',
-    // Used a very light grey so white-background images stand out slightly
+
     background: '#f3f4f6', 
     borderRadius: '6px',
     overflow: 'hidden',
@@ -84,7 +84,7 @@ const styles = {
   },
 };
 
-// --- Sub-Components ---
+
 
 const LibraryItem = React.memo(({ item, onClick }) => {
   const [imgError, setImgError] = useState(false);
@@ -111,7 +111,7 @@ const LibraryItem = React.memo(({ item, onClick }) => {
             style={{ 
               width: '100%', 
               height: '100%', 
-              objectFit: 'cover', // CHANGED: 'cover' forces image to fill the square
+              objectFit: 'cover', 
               display: 'block' 
             }}
             onError={() => setImgError(true)}
@@ -155,7 +155,7 @@ const CategoryHeader = ({ name, isOpen, onClick, count }) => {
   );
 };
 
-// --- Main Component ---
+
 
 export default function LibraryPanel({ addItem }) {
   const [furnitureData, setFurnitureData] = useState([]);
@@ -201,7 +201,7 @@ export default function LibraryPanel({ addItem }) {
     return groups;
   }, [furnitureData, searchTerm]);
 
-  // Auto-expand on search
+
   useEffect(() => {
     const keys = Object.keys(groupedData);
     if (searchTerm && keys.length > 0) {

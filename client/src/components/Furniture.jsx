@@ -98,7 +98,7 @@ export default function Furniture({
       autoScale,
       yOffset,
       labelHeight,
-      baseSize: size, // Exposing base size for collision calculation
+      baseSize: size, 
     };
   }, [clone, type, roomConfig]);
 
@@ -109,12 +109,10 @@ export default function Furniture({
   ];
 
   // --- DYNAMIC COLLISION LOGIC ---
-  // Calculate the maximum radius of the object to prevent corner-clipping when rotated.
   const actualWidth = modelMetrics.baseSize.x * finalScale[0];
   const actualDepth = modelMetrics.baseSize.z * finalScale[2];
   const collisionRadius = Math.sqrt(Math.pow(actualWidth / 2, 2) + Math.pow(actualDepth / 2, 2));
 
-  // The extra gap you want to keep from the wall
   const wallGap = 0.6; 
 
   const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - collisionRadius - wallGap);
@@ -127,7 +125,6 @@ export default function Furniture({
 
     if (currentPos.y !== 0) currentPos.y = 0;
 
-    // Clamp the position using our new dynamically calculated boundaries
     currentPos.x = THREE.MathUtils.clamp(currentPos.x, -widthLimit, widthLimit);
     currentPos.z = THREE.MathUtils.clamp(currentPos.z, -depthLimit, depthLimit);
   };

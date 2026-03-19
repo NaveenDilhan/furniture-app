@@ -141,14 +141,12 @@ const DesignCanvas = forwardRef(({
       )}
 
       <group position={[0, 0, 0]}>
-        {/* Pass the full roomConfig and the setter down to enable the interactive Floor Editor */}
         <Room
           roomConfig={roomConfig}
           setRoomConfig={setRoomConfig}
           is2D={is2D}
         />
         
-        {/* Hide standard grid when editing floor to prevent visual clutter */}
         {is2D && roomConfig.showGrid !== false && !roomConfig.editFloorMode && (
            <Grid 
              args={[100, 100]} 

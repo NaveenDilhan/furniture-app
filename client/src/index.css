@@ -4,7 +4,7 @@
   --bg-input: #3c3c3c;
   --text-main: #e0e0e0;
   --text-muted: #aaaaaa;
-  --accent: #3b82f6; /* Professional Blue */
+  --accent: #3b82f6; 
   --accent-hover: #2563eb;
   --danger: #ef4444;
   --border: #444444;
@@ -19,7 +19,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-dark);
   color: var(--text-main);
-  overflow: hidden; /* Prevent scroll on main body */
+  overflow: hidden; 
 }
 
 /* Custom Scrollbar */

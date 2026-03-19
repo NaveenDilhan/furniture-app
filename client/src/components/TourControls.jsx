@@ -6,12 +6,12 @@ export default function TourControls({ active, onScreenshot, roomConfig }) {
   const { camera } = useThree();
   const moveState = useRef({ forward: false, backward: false, left: false, right: false });
   const speed = 5;
-  const fovRef = useRef(50); // Default FOV for zoom
+  const fovRef = useRef(50); 
 
   useEffect(() => {
     if (!active) return;
 
-    // Set camera to eye-level when entering tour
+
     camera.position.set(0, 1.6, 5);
     camera.fov = 50;
     camera.updateProjectionMatrix();
@@ -38,10 +38,10 @@ export default function TourControls({ active, onScreenshot, roomConfig }) {
       }
     };
 
-    // Scroll wheel zoom (changes FOV)
+
     const onWheel = (e) => {
       fovRef.current += e.deltaY * 0.05;
-      // Clamp FOV between 20 (zoomed in) and 90 (zoomed out)
+
       fovRef.current = Math.max(20, Math.min(90, fovRef.current));
       camera.fov = fovRef.current;
       camera.updateProjectionMatrix();
@@ -55,16 +55,16 @@ export default function TourControls({ active, onScreenshot, roomConfig }) {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
       window.removeEventListener('wheel', onWheel);
-      // Reset all movement when leaving tour
+
       moveState.current = { forward: false, backward: false, left: false, right: false };
-      // Reset FOV back to default
+
       camera.fov = 50;
       camera.updateProjectionMatrix();
     };
   }, [active, camera, onScreenshot]);
 
   // DYNAMIC WALL COLLISION BOUNDARIES
-  const wallGap = 0.5; // Gap to prevent camera near-plane from clipping through walls
+  const wallGap = 0.5; 
   const widthLimit = Math.max(0, (roomConfig?.width || 15) / 2 - wallGap);
   const depthLimit = Math.max(0, (roomConfig?.depth || 15) / 2 - wallGap);
 
@@ -81,15 +81,15 @@ export default function TourControls({ active, onScreenshot, roomConfig }) {
       .multiplyScalar(speed * delta)
       .applyEuler(camera.rotation);
 
-    // Calculate new potential position
+
     const newX = camera.position.x + direction.x;
     const newZ = camera.position.z + direction.z;
 
-    // Apply Wall Collision Detection by clamping the X and Z axes
+
     camera.position.x = THREE.MathUtils.clamp(newX, -widthLimit, widthLimit);
     camera.position.z = THREE.MathUtils.clamp(newZ, -depthLimit, depthLimit);
     
-    // Keep Y position fixed at eye level (no flying)
+
     camera.position.y = 1.6;
   });
 

@@ -60,7 +60,7 @@ export default function Dashboard() {
   const [items, setItems] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   
-  // Modes: '3D', '2D', 'Tour'
+
   const [mode, setMode] = useState('3D');
   const [showTourOverlay, setShowTourOverlay] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -69,7 +69,7 @@ export default function Dashboard() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showScreenshotsModal, setShowScreenshotsModal] = useState(false); 
 
-  // UPDATED: Added editFloorMode and deletedTiles
+
   const [roomConfig, setRoomConfig] = useState({
     shape: 'Rectangular',  
     windows: [],           
@@ -90,7 +90,6 @@ export default function Dashboard() {
   const [toast, setToast] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   
-  // New States for Loading Projects
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [savedDesigns, setSavedDesigns] = useState([]);
 
@@ -194,7 +193,6 @@ export default function Dashboard() {
     } catch (err) { showToast('Save Failed'); }
   };
 
-  // Fetch all designs and open the selection modal
   const fetchDesigns = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/designs/${user._id}`);
@@ -287,7 +285,6 @@ export default function Dashboard() {
           {sidebarCollapsed ? '▶' : '◀'}
         </button>
 
-        {/* UPDATED: Passed setRoomConfig down to DesignCanvas */}
         <DesignCanvas
           ref={canvasRef}
           items={items}

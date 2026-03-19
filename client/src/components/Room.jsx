@@ -3,11 +3,11 @@ import * as THREE from 'three';
 import { useLoader } from '@react-three/fiber';
 import { Grid } from '@react-three/drei';
 
-// Constants for texture scaling
+
 const TEXTURE_SCALE_FLOOR = 4.0;
 const TEXTURE_SCALE_WALL = 3.0;
 
-// Helper: Generates 2D wall points based on shape type
+
 const getFloorPlan = (shape, w, d) => {
   const hw = w / 2; 
   const hd = d / 2;
@@ -23,7 +23,7 @@ const getFloorPlan = (shape, w, d) => {
   }
 };
 
-// Component for a dynamic, single wall segment
+
 function Wall({ p1, p2, height, thickness, windows, texture, color, showBaseboards, isFrontFacing, showFrontWall }) {
   if (!showFrontWall && isFrontFacing) return null;
 
@@ -38,7 +38,7 @@ function Wall({ p1, p2, height, thickness, windows, texture, color, showBaseboar
     shape.lineTo(0, height);
     shape.closePath(); 
 
-    // Carve windows
+
     if (windows && windows.length > 0) {
       windows.forEach(win => {
         const hole = new THREE.Path();
@@ -125,12 +125,12 @@ export default function Room({
   const wallThickness = 0.2;
   const wallPoints = useMemo(() => getFloorPlan(shape, width, depth), [shape, width, depth]);
 
-  // Master Floor Generator with Custom User Holes
+
   const floorGeom = useMemo(() => {
     const hw = width / 2;
     const hd = depth / 2;
     
-    // 1. Base is ALWAYS a perfect rectangle bounding box (CCW)
+  
     const floorShape = new THREE.Shape();
     floorShape.moveTo(-hw, -hd);
     floorShape.lineTo(hw, -hd);
@@ -138,12 +138,11 @@ export default function Room({
     floorShape.lineTo(-hw, hd);
     floorShape.closePath();
 
-    // 2. Subtract user-deleted tiles perfectly (CW holes)
+
     deletedTiles.forEach(tileId => {
       const [tx, tz] = tileId.split('_').map(Number);
       
-      // FIX: The 3D rotation of -90deg on X flips the Y axis into the -Z axis.
-      // Therefore, we MUST invert the Z coordinate to place the hole accurately.
+
       const localX = tx;
       const localY = -tz;
 
@@ -158,7 +157,7 @@ export default function Room({
 
     const geom = new THREE.ExtrudeGeometry(floorShape, { depth: 0.1, bevelEnabled: false });
 
-    // Absolute UV Mapping keeps textures locked perfectly even when punching holes
+
     const pos = geom.attributes.position;
     const uvs = new Float32Array(pos.count * 2);
     for (let i = 0; i < pos.count; i++) {
@@ -172,12 +171,12 @@ export default function Room({
     return geom;
   }, [width, depth, deletedTiles]);
 
-  // Handle clicking to delete/restore tiles
+
   const handleFloorClick = (e) => {
     if (!editFloorMode || !setRoomConfig) return;
-    e.stopPropagation(); // Prevent clicking on objects below the floor
+    e.stopPropagation(); 
     
-    // e.point is ALWAYS the absolute world coordinate intersection
+  
     const cx = Math.floor(e.point.x) + 0.5;
     const cz = Math.floor(e.point.z) + 0.5;
     const id = `${cx}_${cz}`;
@@ -197,7 +196,6 @@ export default function Room({
       {/* --- INTERACTIVE FLOOR EDITOR --- */}
       {editFloorMode && (
         <group position={[0, 0.01, 0]}>
-           {/* Visual Green Grid to show editable cells */}
            <Grid 
              args={[width, depth]} 
              sectionSize={1} 
@@ -206,7 +204,6 @@ export default function Room({
              fadeDistance={50} 
              opacity={0.6}
            />
-           {/* Invisible Plane to catch clicks on empty/deleted spaces so you can restore them */}
            <mesh rotation={[-Math.PI / 2, 0, 0]} onClick={handleFloorClick}>
              <planeGeometry args={[width, depth]} />
              <meshBasicMaterial visible={false} side={THREE.DoubleSide} />
@@ -215,7 +212,6 @@ export default function Room({
       )}
 
       {/* --- FLOOR MESH --- */}
-      {/* If edit mode is active, the floor mesh also catches clicks to delete existing tiles */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow geometry={floorGeom} onClick={editFloorMode ? handleFloorClick : undefined}>
         <meshStandardMaterial 
           map={floorMap} 
