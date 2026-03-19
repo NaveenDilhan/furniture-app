@@ -39,6 +39,7 @@ furniture-app/
     ├── models/             # Mongoose Schemas (User, Design, Furniture, Order)
     ├── routes/             # API Routes
     └── package.json
+```
 
 ## 🙏 Credits & Acknowledgments
 
