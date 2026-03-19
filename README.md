@@ -11,6 +11,8 @@ A full-stack, interactive 3D room design application that allows users to build,
 * **Save & Load Designs**: Authenticated users can save their room configurations and load them later.
 * **E-Commerce Integration**: Add furniture to your cart and checkout directly from your 3D design space.
 * **Desktop App Support**: Packaged with Electron for a native desktop experience.
+* 
+![WoodLand Furnitures App Screenshot](./assets/app-screenshot.png)
 
 ## 🛠️ Tech Stack
 
